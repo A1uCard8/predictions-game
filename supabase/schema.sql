@@ -32,6 +32,7 @@ create table public.markets (
   status public.market_status not null default 'open',
   external_source text,
   external_id text,
+  metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -64,6 +65,9 @@ create index markets_category_idx on public.markets (category);
 create index markets_status_close_idx on public.markets (status, close_date);
 create index markets_external_lookup_idx on public.markets (external_source, external_id)
   where external_source = 'vlr';
+
+create index markets_metadata_resolver_idx on public.markets ((metadata ->> 'resolver'))
+  where metadata ->> 'resolver' is not null;
 create index elo_history_user_id_idx on public.elo_history (user_id, created_at);
 create index users_elo_idx on public.users (elo desc);
 

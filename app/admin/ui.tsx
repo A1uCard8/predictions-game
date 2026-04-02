@@ -8,6 +8,7 @@ export function AdminPanel() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [fullLoading, setFullLoading] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -69,6 +70,32 @@ export function AdminPanel() {
     setMsg(
       `Valorant sync: created ${data.created}, resolved ${data.resolved}, skipped ${data.skipped}` +
         (data.errors?.length ? ` — ${data.errors.join("; ")}` : "")
+    );
+  }
+
+  async function fullIngest() {
+    setErr(null);
+    setMsg(null);
+    setFullLoading(true);
+    const res = await fetch("/api/admin/full-sync", {
+      method: "POST",
+      headers: { "X-Admin-Password": password },
+    });
+    const data = await res.json().catch(() => ({}));
+    setFullLoading(false);
+    if (!res.ok) {
+      setErr(data.error ?? "Full ingest failed");
+      return;
+    }
+    const v = data.valorant ?? {};
+    const n = data.news ?? {};
+    const f = data.finance ?? {};
+    const errAll = [...(v.errors ?? []), ...(n.errors ?? []), ...(f.errors ?? [])].filter(Boolean);
+    setMsg(
+      `Full ingest — Valorant: +${v.created ?? 0} / resolved ${v.resolved ?? 0}. ` +
+        `News: +${n.created ?? 0} / resolved ${n.resolved ?? 0}. ` +
+        `Finance: +${f.created ?? 0} / resolved ${f.resolved ?? 0}.` +
+        (errAll.length ? ` Errors: ${errAll.join("; ")}` : "")
     );
   }
 
@@ -204,10 +231,31 @@ export function AdminPanel() {
       </form>
 
       <div className="space-y-3 rounded-xl border border-plains-border bg-plains-panel/50 p-6">
-        <h2 className="font-mono text-sm uppercase tracking-wider text-plains-muted">Valorant (VLR.gg)</h2>
+        <h2 className="font-mono text-sm uppercase tracking-wider text-plains-muted">Live ingest (recommended)</h2>
         <p className="text-xs text-plains-muted">
-          Pulls upcoming matches into Esports markets and auto-resolves from results. Requires{" "}
-          <code className="text-plains-accent">VLRGGAPI_BASE_URL</code> (see README — often self-hosted).
+          Runs <strong>Valorant</strong> (vlrggapi), <strong>NewsAPI</strong> headline follow-up markets, and{" "}
+          <strong>Yahoo chart</strong> daily stocks/crypto + optional monthly crypto — creates and auto-resolves where
+          rules match. Set env: <code className="text-plains-accent">NEWS_API_KEY</code>,{" "}
+          <code className="text-plains-accent">VLRGGAPI_BASE_URL</code>, optional{" "}
+          <code className="text-plains-accent">AUTO_STOCK_SYMBOLS</code>,{" "}
+          <code className="text-plains-accent">AUTO_CRYPTO_SYMBOLS</code>,{" "}
+          <code className="text-plains-accent">AUTO_MONTHLY_CRYPTO</code>.
+        </p>
+        <button
+          type="button"
+          disabled={fullLoading || !password}
+          onClick={fullIngest}
+          className="rounded-lg bg-plains-accent px-4 py-2 font-mono text-sm font-semibold text-plains-void hover:bg-plains-accentDim disabled:opacity-40"
+        >
+          {fullLoading ? "Running…" : "Run full ingest now"}
+        </button>
+      </div>
+
+      <div className="space-y-3 rounded-xl border border-plains-border bg-plains-panel/50 p-6">
+        <h2 className="font-mono text-sm uppercase tracking-wider text-plains-muted">Valorant only</h2>
+        <p className="text-xs text-plains-muted">
+          Same as before — only Esports from vlrggapi. Requires{" "}
+          <code className="text-plains-accent">VLRGGAPI_BASE_URL</code>.
         </p>
         <button
           type="button"
@@ -215,7 +263,7 @@ export function AdminPanel() {
           onClick={valorantSync}
           className="rounded-lg bg-plains-accent/20 px-4 py-2 font-mono text-sm text-plains-accent hover:bg-plains-accent/30 disabled:opacity-40"
         >
-          {syncLoading ? "Syncing…" : "Run Valorant sync now"}
+          {syncLoading ? "Syncing…" : "Run Valorant sync only"}
         </button>
       </div>
     </div>

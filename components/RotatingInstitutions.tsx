@@ -45,7 +45,7 @@ function scrambleToward(target: string, progress: number): string {
   return out;
 }
 
-export function RotatingInstitutions() {
+export function RotatingInstitutions({ tone = "default" }: { tone?: "default" | "hero" }) {
   const [index, setIndex] = useState(0);
   const [display, setDisplay] = useState(NAMES[0]);
   const [phase, setPhase] = useState(0);
@@ -75,11 +75,15 @@ export function RotatingInstitutions() {
   }, []);
 
   return (
-    <p className="mt-3 max-w-xl text-sm text-plains-muted sm:text-base">
-      <span className="text-foreground/90">Ranked predictions from the best of the best at…</span>{" "}
+    <p
+      className={`mt-3 max-w-xl text-sm sm:text-base ${tone === "hero" ? "text-white/65" : "text-plains-muted"}`}
+    >
+      <span className={tone === "hero" ? "text-white/88" : "text-foreground/90"}>
+        Ranked predictions from the best of the best at…
+      </span>{" "}
       <span
         className="font-mono text-plains-accent tabular-nums"
-        style={{ textShadow: phase < 1 ? "0 0 12px rgba(0,229,168,0.25)" : undefined }}
+        style={{ textShadow: phase < 1 ? "0 0 14px rgba(138,204,22,0.45)" : undefined }}
       >
         {display}
       </span>

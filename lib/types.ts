@@ -22,6 +22,7 @@ export type MarketRow = {
   status: MarketStatus;
   external_source: string | null;
   external_id: string | null;
+  metadata?: Record<string, unknown> | null;
   created_at: string;
 };
 

@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #050508;
-  --foreground: #e8eaef;
+  --background: #050505;
+  --foreground: #f0f2f5;
 }
 
 body {
@@ -17,12 +17,29 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-/* subtle grid like a terminal */
+/* Legacy utility (other pages) */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(30, 36, 51, 0.35) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(30, 36, 51, 0.35) 1px, transparent 1px);
+    linear-gradient(rgba(138, 204, 22, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(138, 204, 22, 0.06) 1px, transparent 1px);
   background-size: 48px 48px;
+}
+
+/* Landing hero HUD overlay (lime-tinted) */
+.landing-hud-grid {
+  background-image:
+    linear-gradient(rgba(138, 204, 22, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(138, 204, 22, 0.09) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
 }

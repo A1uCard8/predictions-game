@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Nav } from "@/components/Nav";
+import { SiteNav } from "@/components/SiteNav";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
@@ -42,7 +42,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased bg-plains-void text-foreground`}>
-        <Nav user={user} profileUsername={profileUsername} />
+        <SiteNav user={user} profileUsername={profileUsername} />
         {children}
       </body>
     </html>

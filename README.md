@@ -6,7 +6,9 @@ Ranked, blind prediction platform: Next.js 14 (App Router), Supabase (Postgres, 
 
 1. **Supabase** — New project → SQL Editor: run `supabase/schema.sql`, then `supabase/storage-avatars.sql` (after creating the `avatars` bucket if the insert fails, create the bucket in Dashboard → Storage, mark public, then re-run policies only).
 
-   **If you created the DB from an older `schema.sql` without `external_*` columns**, also run `supabase/migration_markets_external.sql` once.
+   **If you created the DB from an older `schema.sql`**, also run these **once** in SQL Editor as needed:
+   - `supabase/migration_markets_external.sql` — Valorant dedupe columns
+   - `supabase/migration_markets_metadata.sql` — JSON rules for News/Yahoo auto resolution
 
 2. **Auth** — Authentication → Providers: enable Email and Google. Add redirect URL: `https://<your-domain>/auth/callback` (and `http://localhost:3000/auth/callback` for local dev).
 
@@ -15,12 +17,28 @@ Ranked, blind prediction platform: Next.js 14 (App Router), Supabase (Postgres, 
    - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Project Settings → API.
    - `SUPABASE_SERVICE_ROLE_KEY` — server-only; used for public leaderboard/profile reads and admin resolution (bypasses RLS).
    - `ADMIN_PASSWORD` — shared secret for `/admin` API routes (`X-Admin-Password` header).
-   - `CRON_SECRET` — random string; Vercel Cron calls `GET /api/cron/valorant` with `Authorization: Bearer <CRON_SECRET>` (Vercel injects this when the env var is set).
-   - `VLRGGAPI_BASE_URL` — base URL for [vlrggapi](https://github.com/axsddlr/vlrggapi) (e.g. `http://127.0.0.1:3001` locally). The public `vlrggapi.vercel.app` host is often over quota; **self-host** or deploy that API for production.
+   - `CRON_SECRET` — Vercel Cron hits `GET /api/cron/ingest` with `Authorization: Bearer <CRON_SECRET>`.
+   - `VLRGGAPI_BASE_URL` — [vlrggapi](https://github.com/axsddlr/vlrggapi) base URL (often self-hosted).
+   - `NEWS_API_KEY` — [NewsAPI](https://newsapi.org) for headline follow-up markets.
+   - Optional: `AUTO_STOCK_SYMBOLS`, `AUTO_CRYPTO_SYMBOLS`, `AUTO_MONTHLY_CRYPTO` — Yahoo-backed daily/monthly markets (no extra key; same data family as **yfinance**).
 
 4. **Optional seed** — `supabase/seed.sql` inserts sample markets.
 
 5. **Run** — `npm install` && `npm run dev`.
+
+## Auto markets (News + finance + Valorant)
+
+1. **`NEWS_API_KEY`** — Creates Yes/No markets from US top headlines (business, tech, general). Resolution uses NewsAPI “everything” search: **Yes** if enough distinct follow-up articles appear after the seed story (see `metadata` on the row). Heuristic, not legal/financial advice.
+2. **Yahoo Finance chart** (no API key) — **Daily** US stocks (weekdays) and **daily** crypto: “close above prior close”. Optional **`AUTO_MONTHLY_CRYPTO`** (e.g. `BTC-USD,ETH-USD`) adds end-of-month “above target” markets in the first days of each month. In production this uses the same unofficial Yahoo endpoints Python **yfinance** uses; respect rate limits.
+3. **Valorant** — unchanged; still needs vlrggapi.
+
+**Automatic runs**
+
+- **Vercel (production):** Set `CRON_SECRET` in the project env. Vercel Cron calls `GET /api/cron/ingest` every **10 minutes** (`vercel.json`) with `Authorization: Bearer <CRON_SECRET>`. No admin clicks required.
+- **Local `npm run dev`:** Add `ENABLE_DEV_AUTO_INGEST=true` to `.env.local`. The dev server runs full ingest on a timer (default **5 minutes**, override with `AUTO_INGEST_INTERVAL_MS`, minimum 60000). Restart dev after changing env. Keep **vlrggapi** running if you want Valorant sync locally.
+- **Self-hosted Node** (`next start`, not Vercel): set `ENABLE_AUTO_INGEST=true` (and the same Supabase/service keys). Ignored on Vercel to avoid duplicate work with Cron.
+
+**Manual:** `/admin` → **Run full ingest now**, or `POST /api/admin/full-sync` with `X-Admin-Password`.
 
 ## Valorant / VLR.gg auto markets
 
@@ -32,8 +50,9 @@ Ranked, blind prediction platform: Next.js 14 (App Router), Supabase (Postgres, 
 
 **Triggers**
 
-- **Vercel**: `vercel.json` runs `GET /api/cron/valorant` every 15 minutes. Set `CRON_SECRET` in Vercel env vars (must match what the handler expects).
-- **Manual**: `/admin` → **Run Valorant sync now** (uses `X-Admin-Password`), or `POST /api/admin/valorant-sync` with that header.
+- **Vercel**: `vercel.json` runs `GET /api/cron/ingest` every 10 minutes (full pipeline including Valorant). Set `CRON_SECRET`.
+- **Local / long-running**: see **Automatic runs** above.
+- **Manual**: `/admin` → **Run Valorant sync only** or **Run full ingest now**.
 
 **Note:** Vercel cannot call `http://127.0.0.1:3001`. For production, deploy vlrggapi to a public URL (Railway, Fly, your VPS, etc.) and set `VLRGGAPI_BASE_URL` there.
 

@@ -23,7 +23,7 @@ export const TIERS: TierInfo[] = [
   { id: "platinum", label: "Platinum", min: 1500, max: 1799, color: "#67e8f9" },
   { id: "diamond", label: "Diamond", min: 1800, max: 2099, color: "#a78bfa" },
   { id: "master", label: "Master", min: 2100, max: 2399, color: "#fb7185" },
-  { id: "grandmaster", label: "Grandmaster", min: 2400, max: null, color: "#00e5a8" },
+  { id: "grandmaster", label: "Grandmaster", min: 2400, max: null, color: "#8ACC16" },
 ];
 
 export function tierForElo(elo: number, globalRank?: number | null): TierInfo {
