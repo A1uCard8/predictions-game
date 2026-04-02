@@ -34,7 +34,7 @@ Ranked, blind prediction platform: Next.js 14 (App Router), Supabase (Postgres, 
 
 **Automatic runs**
 
-- **Vercel (production):** Set `CRON_SECRET` in the project env. Vercel Cron calls `GET /api/cron/ingest` every **10 minutes** (`vercel.json`) with `Authorization: Bearer <CRON_SECRET>`. No admin clicks required.
+- **Vercel (production):** Set `CRON_SECRET` in the project env. Vercel Cron calls `GET /api/cron/ingest` with `Authorization: Bearer <CRON_SECRET>`. **`vercel.json` uses once daily (`0 12 * * *` = 12:00 UTC)** so it works on the **Hobby** plan (Hobby allows only daily crons). On **Pro**, you can change the schedule to e.g. `*/10 * * * *` for every 10 minutes. For more frequent runs on Hobby, use a free external pinger (e.g. [cron-job.org](https://cron-job.org)) to `GET` your `/api/cron/ingest` with header `Authorization: Bearer YOUR_CRON_SECRET` every N minutes.
 - **Local `npm run dev`:** Add `ENABLE_DEV_AUTO_INGEST=true` to `.env.local`. The dev server runs full ingest on a timer (default **5 minutes**, override with `AUTO_INGEST_INTERVAL_MS`, minimum 60000). Restart dev after changing env. Keep **vlrggapi** running if you want Valorant sync locally.
 - **Self-hosted Node** (`next start`, not Vercel): set `ENABLE_AUTO_INGEST=true` (and the same Supabase/service keys). Ignored on Vercel to avoid duplicate work with Cron.
 
@@ -50,7 +50,7 @@ Ranked, blind prediction platform: Next.js 14 (App Router), Supabase (Postgres, 
 
 **Triggers**
 
-- **Vercel**: `vercel.json` runs `GET /api/cron/ingest` every 10 minutes (full pipeline including Valorant). Set `CRON_SECRET`.
+- **Vercel**: `vercel.json` runs `GET /api/cron/ingest` **once per day** (12:00 UTC) on Hobby-compatible schedule; set `CRON_SECRET`. Upgrade to Pro for sub-daily Vercel Cron, or use an external cron service for more frequent pings.
 - **Local / long-running**: see **Automatic runs** above.
 - **Manual**: `/admin` → **Run Valorant sync only** or **Run full ingest now**.
 
