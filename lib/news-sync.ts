@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fetchEverything, fetchTopHeadlines, getNewsApiKey } from "./newsapi";
 import { resolveMarket } from "./resolve-market";
@@ -21,8 +20,14 @@ export type NewsSyncReport = {
   errors: string[];
 };
 
-function hashExternalId(url: string): string {
-  return createHash("sha256").update(url).digest("hex").slice(0, 24);
+/** Web Crypto (no Node `crypto`) — safe when bundled with `instrumentation.ts` on Vercel. */
+async function hashExternalId(url: string): Promise<string> {
+  const data = new TextEncoder().encode(url);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 24);
 }
 
 /** Short query from headline for NewsAPI `everything` (not too strict). */
@@ -74,7 +79,7 @@ export async function createNewsMarkets(admin: SupabaseClient): Promise<NewsSync
         continue;
       }
 
-      const extId = hashExternalId(url);
+      const extId = await hashExternalId(url);
       const { data: exists } = await admin
         .from("markets")
         .select("id")
