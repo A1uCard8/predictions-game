@@ -4,6 +4,9 @@ export const CATEGORIES = [
   "Geopolitics",
   "Sports",
   "Esports",
+  "Valorant",
+  "CS2",
+  "Pokemon Cards",
   "Science/Tech",
   "Culture",
 ] as const;

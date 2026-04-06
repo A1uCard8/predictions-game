@@ -30,7 +30,7 @@ export function LeaderboardTable({ rows, highlightUserId, globalRanks }: Props) 
             return (
               <tr
                 key={r.user_id}
-                className={`border-b border-plains-border/60 transition-colors hover:bg-white/[0.03] ${
+                className={`border-b border-plains-border/60 transition-colors hover:bg-plains-mist/80 ${
                   isMe ? "bg-plains-accent/10" : ""
                 }`}
               >

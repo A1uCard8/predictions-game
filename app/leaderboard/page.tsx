@@ -1,3 +1,4 @@
+import { EloExplainPanel } from "@/components/EloExplainPanel";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
 import { CATEGORIES, CATEGORY_LEADER_MIN_PREDICTIONS } from "@/lib/constants";
 import { getCategoryLeaderboard, getGlobalLeaderboard } from "@/lib/leaderboard";
@@ -67,6 +68,10 @@ export default async function LeaderboardPage({
             {c}
           </Link>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <EloExplainPanel />
       </div>
 
       <div className="mt-8">

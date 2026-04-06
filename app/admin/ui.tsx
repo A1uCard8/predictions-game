@@ -88,12 +88,16 @@ export function AdminPanel() {
       return;
     }
     const v = data.valorant ?? {};
-    const n = data.news ?? {};
+    const d = data.dome ?? {};
+    const p = data.pokemon ?? {};
     const f = data.finance ?? {};
-    const errAll = [...(v.errors ?? []), ...(n.errors ?? []), ...(f.errors ?? [])].filter(Boolean);
+    const errAll = [...(v.errors ?? []), ...(d.errors ?? []), ...(p.errors ?? []), ...(f.errors ?? [])].filter(
+      Boolean,
+    );
     setMsg(
       `Full ingest — Valorant: +${v.created ?? 0} / resolved ${v.resolved ?? 0}. ` +
-        `News: +${n.created ?? 0} / resolved ${n.resolved ?? 0}. ` +
+        `Dome: Polymarket +${d.polyCreated ?? 0}, Kalshi +${d.kalshiCreated ?? 0}, resolved ${d.resolved ?? 0}. ` +
+        `Pokémon TCG: +${p.created ?? 0} / resolved ${p.resolved ?? 0}. ` +
         `Finance: +${f.created ?? 0} / resolved ${f.resolved ?? 0}.` +
         (errAll.length ? ` Errors: ${errAll.join("; ")}` : "")
     );
@@ -145,20 +149,20 @@ export function AdminPanel() {
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded-lg border border-plains-border bg-plains-void px-3 py-2 outline-none"
+          className="w-full rounded-lg border border-plains-border bg-white px-3 py-2 outline-none"
           required
         />
         <textarea
           placeholder="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="min-h-[88px] w-full rounded-lg border border-plains-border bg-plains-void px-3 py-2 outline-none"
+          className="min-h-[88px] w-full rounded-lg border border-plains-border bg-white px-3 py-2 outline-none"
           required
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as (typeof CATEGORIES)[number])}
-          className="w-full rounded-lg border border-plains-border bg-plains-void px-3 py-2 outline-none"
+          className="w-full rounded-lg border border-plains-border bg-white px-3 py-2 outline-none"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
@@ -171,14 +175,14 @@ export function AdminPanel() {
             placeholder="Option 1"
             value={optA}
             onChange={(e) => setOptA(e.target.value)}
-            className="rounded-lg border border-plains-border bg-plains-void px-3 py-2 outline-none"
+            className="rounded-lg border border-plains-border bg-white px-3 py-2 outline-none"
             required
           />
           <input
             placeholder="Option 2"
             value={optB}
             onChange={(e) => setOptB(e.target.value)}
-            className="rounded-lg border border-plains-border bg-plains-void px-3 py-2 outline-none"
+            className="rounded-lg border border-plains-border bg-white px-3 py-2 outline-none"
             required
           />
         </div>
@@ -189,7 +193,7 @@ export function AdminPanel() {
               type="datetime-local"
               value={closeDate}
               onChange={(e) => setCloseDate(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-plains-border bg-plains-void px-3 py-2 outline-none"
+              className="mt-1 w-full rounded-lg border border-plains-border bg-white px-3 py-2 outline-none"
               required
             />
           </div>
@@ -199,7 +203,7 @@ export function AdminPanel() {
               type="datetime-local"
               value={resolutionDate}
               onChange={(e) => setResolutionDate(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-plains-border bg-plains-void px-3 py-2 outline-none"
+              className="mt-1 w-full rounded-lg border border-plains-border bg-white px-3 py-2 outline-none"
               required
             />
           </div>
@@ -215,14 +219,14 @@ export function AdminPanel() {
           placeholder="Market UUID"
           value={resolveMarketId}
           onChange={(e) => setResolveMarketId(e.target.value)}
-          className="w-full rounded-lg border border-plains-border bg-plains-void px-3 py-2 font-mono text-sm outline-none"
+          className="w-full rounded-lg border border-plains-border bg-white px-3 py-2 font-mono text-sm outline-none"
           required
         />
         <input
           placeholder="Correct option (exact string)"
           value={correctOption}
           onChange={(e) => setCorrectOption(e.target.value)}
-          className="w-full rounded-lg border border-plains-border bg-plains-void px-3 py-2 outline-none"
+          className="w-full rounded-lg border border-plains-border bg-white px-3 py-2 outline-none"
           required
         />
         <button type="submit" className="rounded-lg border border-plains-accent/50 px-4 py-2 font-mono text-plains-accent hover:bg-plains-accent/10">
@@ -233,13 +237,12 @@ export function AdminPanel() {
       <div className="space-y-3 rounded-xl border border-plains-border bg-plains-panel/50 p-6">
         <h2 className="font-mono text-sm uppercase tracking-wider text-plains-muted">Live ingest (recommended)</h2>
         <p className="text-xs text-plains-muted">
-          Runs <strong>Valorant</strong> (vlrggapi), <strong>NewsAPI</strong> headline follow-up markets, and{" "}
-          <strong>Yahoo chart</strong> daily stocks/crypto + optional monthly crypto — creates and auto-resolves where
-          rules match. Set env: <code className="text-plains-accent">NEWS_API_KEY</code>,{" "}
+          Runs <strong>Valorant</strong> (vlrggapi), <strong>Dome</strong> (Polymarket + Kalshi mirrors),{" "}
+          <strong>Pokémon TCG</strong> (TCGdex price targets), and <strong>Yahoo chart</strong> daily stocks/crypto +
+          optional monthly crypto. Set env: <code className="text-plains-accent">DOME_API_KEY</code>,{" "}
           <code className="text-plains-accent">VLRGGAPI_BASE_URL</code>, optional{" "}
-          <code className="text-plains-accent">AUTO_STOCK_SYMBOLS</code>,{" "}
-          <code className="text-plains-accent">AUTO_CRYPTO_SYMBOLS</code>,{" "}
-          <code className="text-plains-accent">AUTO_MONTHLY_CRYPTO</code>.
+          <code className="text-plains-accent">POKEMON_TCG_CARD_IDS</code>,{" "}
+          <code className="text-plains-accent">AUTO_STOCK_SYMBOLS</code>, etc.
         </p>
         <button
           type="button"

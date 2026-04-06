@@ -3,7 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserGlobalRank } from "@/lib/leaderboard";
+import { EloExplainPanel } from "@/components/EloExplainPanel";
+import { MarketCard } from "@/components/MarketCard";
+import { RankProgress } from "@/components/RankProgress";
 import { TierBadge } from "@/components/TierBadge";
+import { batchMarketPickStats } from "@/lib/market-stats";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage({
@@ -54,9 +58,14 @@ export default async function DashboardPage({
   const active = (activePreds ?? []).filter((p) => activeMarketById.has(p.market_id));
 
   let rank: number | null = null;
+  let deskStats = new Map<string, { count: number; topOption: string | null; topPct: number | null }>();
   try {
     const admin = createAdminClient();
     rank = await getUserGlobalRank(admin, user.id);
+    deskStats = await batchMarketPickStats(
+      admin,
+      openList.map((m) => m.id),
+    );
   } catch {
     rank = null;
   }
@@ -65,7 +74,7 @@ export default async function DashboardPage({
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div className="flex flex-col gap-6 lg:flex-row">
         <aside className="lg:w-72 shrink-0 space-y-4">
-          <div className="rounded-xl border border-plains-border bg-plains-panel p-4">
+          <div className="rounded-xl border border-plains-border bg-plains-panel p-4 shadow-sm">
             <p className="text-xs font-mono uppercase text-plains-muted">Your rank</p>
             <p className="mt-2 font-mono text-3xl text-plains-accent">{rank != null ? `#${rank}` : "—"}</p>
             <div className="mt-3">
@@ -74,12 +83,16 @@ export default async function DashboardPage({
             <p className="mt-4 font-mono text-sm text-plains-muted">
               ELO <span className="text-foreground">{profile?.elo ?? 1000}</span>
             </p>
-            <p className="mt-1 font-mono text-xs text-plains-muted">
-              Record{" "}
+            <div className="mt-4">
+              <RankProgress elo={profile?.elo ?? 1000} />
+            </div>
+            <p className="mt-4 font-mono text-xs text-plains-muted">
+              Match record{" "}
               <span className="text-plains-accent">{winCount}</span>W /{" "}
               <span className="text-plains-danger">{lossCount}</span>L · {resolvedPreds.length} resolved
             </p>
           </div>
+          <EloExplainPanel />
           <div className="rounded-xl border border-plains-border bg-plains-panel p-4">
             <p className="text-xs font-mono uppercase text-plains-muted">Active predictions</p>
             <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto text-sm">
@@ -126,28 +139,26 @@ export default async function DashboardPage({
             </div>
           </div>
 
-          <ul className="mt-6 space-y-3">
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2">
             {openList.length === 0 && (
-              <li className="rounded-xl border border-dashed border-plains-border p-8 text-center text-plains-muted">
+              <li className="col-span-full rounded-xl border border-dashed border-plains-border p-8 text-center text-plains-muted">
                 No open markets in this filter. Check back soon.
               </li>
             )}
-            {openList.map((m) => (
-              <li key={m.id}>
-                <Link
-                  href={`/markets/${m.id}`}
-                  className="block rounded-xl border border-plains-border bg-plains-panel/80 p-4 transition-all hover:border-plains-accent/40 hover:shadow-glow"
-                >
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono uppercase text-plains-muted">
-                    <span>{m.category}</span>
-                    <span>·</span>
-                    <span>Closes {new Date(m.close_date).toLocaleString()}</span>
-                  </div>
-                  <h2 className="mt-2 text-lg font-semibold">{m.title}</h2>
-                  <p className="mt-1 line-clamp-2 text-sm text-plains-muted">{m.description}</p>
-                </Link>
-              </li>
-            ))}
+            {openList.map((m) => {
+              const s = deskStats.get(m.id);
+              return (
+                <li key={m.id}>
+                  <MarketCard
+                    market={m}
+                    pickCount={s?.count ?? 0}
+                    topOption={s?.topOption}
+                    topPct={s?.topPct}
+                    compact
+                  />
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>

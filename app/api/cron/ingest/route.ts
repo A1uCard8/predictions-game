@@ -3,7 +3,7 @@ import { runFullIngest } from "@/lib/full-ingest";
 import { NextResponse } from "next/server";
 
 /**
- * Full pipeline: Valorant + NewsAPI + Yahoo finance/crypto (create + auto-resolve).
+ * Full pipeline: Valorant + Dome + Pokémon TCG + Yahoo finance/crypto + CS2 SteamAnalyst (optional key).
  * Vercel Cron: set path to /api/cron/ingest and CRON_SECRET.
  */
 export async function GET(request: Request) {

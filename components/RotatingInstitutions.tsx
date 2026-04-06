@@ -45,7 +45,14 @@ function scrambleToward(target: string, progress: number): string {
   return out;
 }
 
-export function RotatingInstitutions({ tone = "default" }: { tone?: "default" | "hero" }) {
+export function RotatingInstitutions({
+  tone = "default",
+  compact = false,
+}: {
+  tone?: "default" | "hero" | "light";
+  /** Smaller copy for homepage subhead */
+  compact?: boolean;
+}) {
   const [index, setIndex] = useState(0);
   const [display, setDisplay] = useState(NAMES[0]);
   const [phase, setPhase] = useState(0);
@@ -74,17 +81,29 @@ export function RotatingInstitutions({ tone = "default" }: { tone?: "default" | 
     return () => clearInterval(t);
   }, []);
 
+  const muted =
+    tone === "hero" ? "text-white/65" : tone === "light" ? "text-plains-muted" : "text-plains-muted";
+  const lead =
+    tone === "hero"
+      ? "text-white/88"
+      : tone === "light"
+        ? "text-plains-void/80 font-medium tracking-[-0.01em]"
+        : "text-foreground/90";
+  const glow =
+    tone === "hero" || tone === "light"
+      ? phase < 1
+        ? "0 0 14px rgba(232,185,35,0.4)"
+        : undefined
+      : undefined;
+
+  const wrap = compact
+    ? "mt-2 max-w-xl text-[13px] leading-snug sm:text-sm sm:leading-relaxed"
+    : "mt-3 max-w-xl text-sm sm:text-base";
+
   return (
-    <p
-      className={`mt-3 max-w-xl text-sm sm:text-base ${tone === "hero" ? "text-white/65" : "text-plains-muted"}`}
-    >
-      <span className={tone === "hero" ? "text-white/88" : "text-foreground/90"}>
-        Ranked predictions from the best of the best at…
-      </span>{" "}
-      <span
-        className="font-mono text-plains-accent tabular-nums"
-        style={{ textShadow: phase < 1 ? "0 0 14px rgba(138,204,22,0.45)" : undefined }}
-      >
+    <p className={`${wrap} ${muted}`}>
+      <span className={lead}>Ranked predictions from the best of the best at…</span>{" "}
+      <span className="font-mono text-sm font-semibold text-plains-accentDim tabular-nums" style={{ textShadow: glow }}>
         {display}
       </span>
     </p>

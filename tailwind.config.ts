@@ -12,15 +12,20 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         plains: {
-          void: "#050505",
-          sidebar: "#000000",
-          panel: "#0a0a0c",
-          border: "#1a1f18",
-          accent: "#8ACC16",
-          accentDim: "#6fb010",
-          danger: "#ff4d6d",
+          /* Dark ink for text on accent CTAs */
+          void: "#0a0d10",
+          /* Light “heavenly” shell */
+          canvas: "#e8eef8",
+          heaven: "#eef3fc",
+          mist: "#f6f8fe",
+          sidebar: "#fbfcff",
+          panel: "#ffffff",
+          border: "#d4dce8",
+          accent: "#e8b923",
+          accentDim: "#c49a16",
+          danger: "#e11d48",
           gold: "#f5c542",
-          muted: "#8b9199",
+          muted: "#5c6470",
         },
       },
       fontFamily: {
@@ -28,7 +33,7 @@ const config: Config = {
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
       },
       boxShadow: {
-        glow: "0 0 28px rgba(138, 204, 22, 0.25)",
+        glow: "0 0 28px rgba(232, 185, 35, 0.32)",
       },
     },
   },

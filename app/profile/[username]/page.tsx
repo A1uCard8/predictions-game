@@ -90,16 +90,22 @@ export default async function ProfilePage({ params }: { params: { username: stri
       </section>
 
       <section className="mt-8">
-        <h2 className="font-mono text-sm uppercase tracking-wider text-plains-muted">Prediction history</h2>
+        <h2 className="font-mono text-sm uppercase tracking-wider text-plains-muted">Match history</h2>
         <ul className="mt-4 space-y-3">
           {(preds ?? []).length === 0 && <li className="text-plains-muted">No predictions yet.</li>}
           {(preds ?? []).map((p) => {
             const m = marketById.get(p.market_id);
             const showResult = m?.status === "resolved";
+            const outcomeClass =
+              showResult && p.is_correct === true
+                ? "border-l-plains-accent"
+                : showResult && p.is_correct === false
+                  ? "border-l-plains-danger"
+                  : "border-l-plains-border";
             return (
               <li
                 key={p.id}
-                className="rounded-lg border border-plains-border bg-plains-panel/50 px-4 py-3"
+                className={`rounded-lg border border-plains-border border-l-4 bg-plains-panel/50 py-3 pl-4 pr-4 shadow-sm ${outcomeClass}`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Link

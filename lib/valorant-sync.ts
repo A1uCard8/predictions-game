@@ -8,7 +8,7 @@ import {
 import { resolveMarket } from "./resolve-market";
 
 const SOURCE = "vlr" as const;
-const CATEGORY = "Esports";
+const CATEGORY = "Valorant";
 
 export type ValorantSyncReport = {
   created: number;

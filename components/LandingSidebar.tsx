@@ -59,7 +59,7 @@ function CategoryIcon({ cat }: { cat: string }) {
 }
 
 function categoryHref(cat: string) {
-  return `/dashboard?category=${encodeURIComponent(cat)}`;
+  return `/markets?category=${encodeURIComponent(cat)}`;
 }
 
 export function LandingSidebar() {
@@ -68,7 +68,7 @@ export function LandingSidebar() {
       {/* Mobile: horizontal strip */}
       <div className="scrollbar-hide flex gap-1 overflow-x-auto border-b border-plains-border/40 bg-plains-sidebar px-3 py-2 md:hidden">
         <Link
-          href="/dashboard"
+          href="/markets"
           className="shrink-0 rounded-md px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-plains-muted hover:bg-plains-accent/10 hover:text-plains-accent"
         >
           All
@@ -92,7 +92,7 @@ export function LandingSidebar() {
         </div>
         <nav className="flex flex-col gap-0.5">
           <Link
-            href="/dashboard"
+            href="/markets"
             className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-plains-muted transition-colors hover:bg-plains-accent/10 hover:text-plains-accent"
           >
             <span className="opacity-70">◇</span>

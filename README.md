@@ -19,18 +19,22 @@ Ranked, blind prediction platform: Next.js 14 (App Router), Supabase (Postgres, 
    - `ADMIN_PASSWORD` — shared secret for `/admin` API routes (`X-Admin-Password` header).
    - `CRON_SECRET` — Vercel Cron hits `GET /api/cron/ingest` with `Authorization: Bearer <CRON_SECRET>`.
    - `VLRGGAPI_BASE_URL` — [vlrggapi](https://github.com/axsddlr/vlrggapi) base URL (often self-hosted).
-   - `NEWS_API_KEY` — [NewsAPI](https://newsapi.org) for headline follow-up markets.
+   - `DOME_API_KEY` — [Dome API](https://dashboard.domeapi.io/) for Polymarket + Kalshi market mirrors (`lib/dome-sync.ts`).
    - Optional: `AUTO_STOCK_SYMBOLS`, `AUTO_CRYPTO_SYMBOLS`, `AUTO_MONTHLY_CRYPTO` — Yahoo-backed daily/monthly markets (no extra key; same data family as **yfinance**).
 
 4. **Optional seed** — `supabase/seed.sql` inserts sample markets.
 
 5. **Run** — `npm install` && `npm run dev`.
 
-## Auto markets (News + finance + Valorant)
+## Auto markets (Dome + finance + Valorant)
 
-1. **`NEWS_API_KEY`** — Creates Yes/No markets from US top headlines (business, tech, general). Resolution uses NewsAPI “everything” search: **Yes** if enough distinct follow-up articles appear after the seed story (see `metadata` on the row). Heuristic, not legal/financial advice.
+1. **`DOME_API_KEY`** — Pulls liquid open markets from **Polymarket** and **Kalshi** via [Dome](https://docs.domeapi.io/); resolves Plains rows when Dome reports a closed outcome (`winning_side` / Kalshi `result`). Tune volume thresholds with `DOME_POLY_MIN_VOLUME`, `DOME_KALSHI_MIN_VOLUME`, pagination via `DOME_INGEST_PAGES` / `DOME_INGEST_LIMIT` (see `.env.example`).
 2. **Yahoo Finance chart** (no API key) — **Daily** US stocks (weekdays) and **daily** crypto: “close above prior close”. Optional **`AUTO_MONTHLY_CRYPTO`** (e.g. `BTC-USD,ETH-USD`) adds end-of-month “above target” markets in the first days of each month. In production this uses the same unofficial Yahoo endpoints Python **yfinance** uses; respect rate limits.
 3. **Valorant** — unchanged; still needs vlrggapi.
+
+Optional **NewsAPI** code remains in `lib/news-sync.ts` but is **not** part of `runFullIngest`. To delete old NewsAPI rows in Supabase, run `supabase/migration_delete_newsapi_markets.sql` once.
+
+**Pokémon TCG** — `POKEMON_TCG_CARD_IDS` (optional) + TCGdex public API creates monthly price-target markets; see `.env.example`.
 
 **Automatic runs**
 

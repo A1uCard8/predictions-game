@@ -23,7 +23,7 @@ export const TIERS: TierInfo[] = [
   { id: "platinum", label: "Platinum", min: 1500, max: 1799, color: "#67e8f9" },
   { id: "diamond", label: "Diamond", min: 1800, max: 2099, color: "#a78bfa" },
   { id: "master", label: "Master", min: 2100, max: 2399, color: "#fb7185" },
-  { id: "grandmaster", label: "Grandmaster", min: 2400, max: null, color: "#8ACC16" },
+  { id: "grandmaster", label: "Grandmaster", min: 2400, max: null, color: "#e8b923" },
 ];
 
 export function tierForElo(elo: number, globalRank?: number | null): TierInfo {
@@ -42,4 +42,30 @@ export function tierForElo(elo: number, globalRank?: number | null): TierInfo {
     if (elo >= t.min && elo <= cap) return t;
   }
   return TIERS[0];
+}
+
+/**
+ * Progress toward the next rank tier (League-style ladder).
+ * Top 500 badge is cosmetic; the bar uses raw ELO vs fixed tier thresholds.
+ */
+export function ladderProgress(elo: number): {
+  current: TierInfo;
+  next: TierInfo | null;
+  progressToNext: number;
+} {
+  let idx = 0;
+  for (let i = TIERS.length - 1; i >= 0; i--) {
+    const t = TIERS[i];
+    const cap = t.max ?? Infinity;
+    if (elo >= t.min && elo <= cap) {
+      idx = i;
+      break;
+    }
+  }
+  const current = TIERS[idx];
+  const next = idx < TIERS.length - 1 ? TIERS[idx + 1] : null;
+  if (!next) return { current, next: null, progressToNext: 1 };
+  const span = next.min - current.min;
+  const progressToNext = span <= 0 ? 1 : Math.min(1, Math.max(0, (elo - current.min) / span));
+  return { current, next, progressToNext };
 }

@@ -24,32 +24,33 @@ export function EloChart({ data }: { data: Point[] }) {
         <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <XAxis
             dataKey="t"
-            tick={{ fill: "#6b7280", fontSize: 11 }}
+            tick={{ fill: "#5c6470", fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: "#1e2433" }}
+            axisLine={{ stroke: "#d4dce8" }}
           />
           <YAxis
             domain={["auto", "auto"]}
-            tick={{ fill: "#6b7280", fontSize: 11 }}
+            tick={{ fill: "#5c6470", fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: "#1e2433" }}
+            axisLine={{ stroke: "#d4dce8" }}
             width={44}
           />
           <Tooltip
             contentStyle={{
-              background: "#0c0e14",
-              border: "1px solid #1e2433",
+              background: "#ffffff",
+              border: "1px solid #d4dce8",
               borderRadius: 8,
+              boxShadow: "0 8px 24px rgba(15,20,25,0.08)",
             }}
-            labelStyle={{ color: "#9ca3af" }}
+            labelStyle={{ color: "#5c6470" }}
           />
           <Line
             type="monotone"
             dataKey="elo"
-            stroke="#8ACC16"
+            stroke="#e8b923"
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 4, fill: "#8ACC16" }}
+            activeDot={{ r: 4, fill: "#e8b923" }}
           />
         </LineChart>
       </ResponsiveContainer>

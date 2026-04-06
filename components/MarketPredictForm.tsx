@@ -67,7 +67,7 @@ export function MarketPredictForm({ marketId, options, locked, chosen }: Props) 
         type="button"
         disabled={!selected || loading}
         onClick={submit}
-        className="w-full rounded-lg bg-plains-accent py-3 font-mono font-semibold text-plains-void disabled:opacity-40"
+        className="btn-primary w-full py-3 disabled:opacity-40"
       >
         {loading ? "Submitting…" : "Submit prediction"}
       </button>
