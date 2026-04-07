@@ -42,7 +42,13 @@ async function runIngestOnce(): Promise<void> {
     },
     pokemon: { created: r.pokemon.created, resolved: r.pokemon.resolved },
     finance: { created: r.finance.created, resolved: r.finance.resolved },
-    cs2: { created: r.cs2.created, resolved: r.cs2.resolved },
+    cs2: {
+      created: r.cs2.created,
+      resolved: r.cs2.resolved,
+      steamanalystConfigured: r.cs2.steamanalystConfigured,
+      apiItemCount: r.cs2.apiItemCount,
+      ...(r.cs2.errors.length ? { cs2Errors: r.cs2.errors } : {}),
+    },
   });
 }
 

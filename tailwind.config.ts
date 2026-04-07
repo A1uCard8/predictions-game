@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 
+/** Stitch / “Algorithmic Precision” tokens — see ~/Downloads/stitch */
 const config: Config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -12,28 +13,42 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         plains: {
-          /* Dark ink for text on accent CTAs */
-          void: "#0a0d10",
-          /* Light “heavenly” shell */
-          canvas: "#e8eef8",
-          heaven: "#eef3fc",
-          mist: "#f6f8fe",
-          sidebar: "#fbfcff",
+          void: "#1b1c1c",
+          onSurfaceVariant: "#434656",
+          canvas: "#fbf9f8",
+          heaven: "#f5f3f3",
+          mist: "#f5f3f3",
+          sidebar: "#fbf9f8",
           panel: "#ffffff",
-          border: "#d4dce8",
-          accent: "#e8b923",
-          accentDim: "#c49a16",
-          danger: "#e11d48",
-          gold: "#f5c542",
-          muted: "#5c6470",
+          container: "#efeded",
+          containerHigh: "#e9e8e7",
+          containerHighest: "#e4e2e2",
+          border: "#c3c5d9",
+          outline: "#737688",
+          primary: "#003ec7",
+          primaryHi: "#0052ff",
+          accent: "#0052ff",
+          accentDim: "#003ec7",
+          secondary: "#7a2ad6",
+          secondaryContainer: "#944af1",
+          tertiary: "#005474",
+          danger: "#ba1a1a",
+          dangerMuted: "#ffdad6",
+          gold: "#f59e0b",
+          muted: "#434656",
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        headline: ["var(--font-space-grotesk)", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains-mono)", "ui-monospace", "monospace"],
       },
       boxShadow: {
-        glow: "0 0 28px rgba(232, 185, 35, 0.32)",
+        glow: "0 20px 40px rgba(0, 62, 199, 0.06)",
+        stitch: "0 1px 0 rgba(27, 28, 28, 0.04), 0 16px 40px -12px rgba(0, 62, 199, 0.08)",
+      },
+      borderRadius: {
+        stitch: "0.125rem",
       },
     },
   },

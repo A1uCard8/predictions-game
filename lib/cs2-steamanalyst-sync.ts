@@ -18,6 +18,8 @@ export type Cs2SteamMeta = {
 };
 
 export type Cs2SteamSyncReport = {
+  /** False when `STEAMANALYST_API_KEY` is missing — no CS2 markets will be created. */
+  steamanalystConfigured: boolean;
   created: number;
   resolved: number;
   skipped: number;
@@ -178,7 +180,9 @@ async function insertCs2Market(
 }
 
 export async function runCs2SteamAnalystSync(admin: SupabaseClient): Promise<Cs2SteamSyncReport> {
+  const configured = steamAnalystConfigured();
   const report: Cs2SteamSyncReport = {
+    steamanalystConfigured: configured,
     created: 0,
     resolved: 0,
     skipped: 0,
@@ -187,9 +191,9 @@ export async function runCs2SteamAnalystSync(admin: SupabaseClient): Promise<Cs2
     unmatchedSeeds: [],
   };
 
-  if (!steamAnalystConfigured()) {
+  if (!configured) {
     report.errors.push(
-      "cs2: STEAMANALYST_API_KEY is not set — add it to .env.local and run ingest (cron or POST /api/admin/full-sync).",
+      "cs2: STEAMANALYST_API_KEY is not set — CS2 markets are skipped. Add the key to .env.local (and Vercel env) then run ingest.",
     );
     return report;
   }
@@ -207,8 +211,6 @@ export async function runCs2SteamAnalystSync(admin: SupabaseClient): Promise<Cs2
     report.errors.push("cs2: SteamAnalyst returned zero items — check API key and plan limits.");
     return report;
   }
-
-  report.errors.push(`cs2: loaded ${all.length} items from SteamAnalyst`);
 
   const maxCreate = Math.max(0, Math.min(24, numEnv("CS2_MAX_MARKETS_PER_RUN", 8)));
   const targetPct = numEnv("CS2_TARGET_PCT", 4);

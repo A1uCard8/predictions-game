@@ -22,7 +22,7 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
       setErr(error.message);
       return;
     }
-    router.push(nextPath && nextPath.startsWith("/") ? nextPath : "/dashboard");
+    router.push(nextPath && nextPath.startsWith("/") ? nextPath : "/portfolio");
     router.refresh();
   }
 
@@ -31,7 +31,7 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
     const origin = window.location.origin;
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(nextPath ?? "/dashboard")}` },
+      options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(nextPath ?? "/portfolio")}` },
     });
   }
 

@@ -115,6 +115,14 @@ export async function fetchSteamAnalystPrices(): Promise<SteamAnalystItem[]> {
     if (!res.ok) {
       lastStatus = String(res.status);
       lastBody = await res.text().catch(() => "");
+      try {
+        const j = JSON.parse(lastBody) as { success?: boolean; error?: { code?: string; message?: string } };
+        if (j?.error?.message) {
+          lastBody = `${j.error.code ?? "error"}: ${j.error.message}`;
+        }
+      } catch {
+        /* keep raw body */
+      }
       continue;
     }
     let data: unknown;
@@ -127,7 +135,11 @@ export async function fetchSteamAnalystPrices(): Promise<SteamAnalystItem[]> {
     if (items.length > 0) return items;
   }
 
+  const hint =
+    lastStatus === "401" || lastStatus === "403"
+      ? " (invalid or missing API key, or plan does not include this endpoint)"
+      : "";
   throw new Error(
-    `SteamAnalyst: no item list (last HTTP ${lastStatus || "?"}${lastBody ? `: ${lastBody.slice(0, 120)}` : ""})`,
+    `SteamAnalyst: no item list (last HTTP ${lastStatus || "?"}${lastBody ? `: ${lastBody.slice(0, 120)}` : ""})${hint}`,
   );
 }

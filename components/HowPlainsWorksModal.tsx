@@ -3,7 +3,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useId, useState } from "react";
 import { CATEGORY_LEADER_MIN_PREDICTIONS, ELO_LOSS, ELO_WIN } from "@/lib/constants";
-import { TIERS } from "@/lib/tiers";
+import { TIERS, TOP500_TIER_BASE, tierLabelStyle } from "@/lib/tiers";
 
 export function HowPlainsWorksTrigger({ className = "" }: { className?: string }) {
   const [open, setOpen] = useState(false);
@@ -49,23 +49,32 @@ export function HowPlainsWorksTrigger({ className = "" }: { className?: string }
               role="dialog"
               aria-modal="true"
               aria-labelledby={id}
-              className="relative z-10 flex max-h-[min(88dvh,calc(100svh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-plains-border bg-plains-panel shadow-2xl"
+              className="relative z-10 flex max-h-[min(88dvh,calc(100svh-2rem))] w-full max-w-lg flex-col overflow-hidden bg-plains-panel shadow-glow"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-4 pt-6">
-                <h2 id={id} className="text-lg font-bold text-plains-void">
+                <h2 id={id} className="font-headline text-xl font-bold tracking-tight text-plains-void">
                   How Plains works
                 </h2>
                 <div className="mt-4 space-y-4 text-sm leading-relaxed text-plains-muted">
+                  <p>
+                    <strong className="text-foreground">What Plains is.</strong> A{" "}
+                    <strong className="text-foreground">competitive prediction market</strong> for real-world questions:
+                    you commit to an outcome before it resolves, see how conviction moves in the aggregate (charts on
+                    two-outcome markets), and climb a global skill ladder — <strong className="text-foreground">no real</strong>{" "}
+                    money, <strong className="text-foreground">no withdrawals</strong>; reputation and seasonal credits
+                    only.
+                  </p>
                   <p>
                     <strong className="text-foreground">Pick once.</strong> Each open market lets you lock{" "}
                     <strong className="text-foreground">one</strong> option before it closes. No edits — blind skill
                     only.
                   </p>
                   <p>
-                    <strong className="text-foreground">Climb ELO.</strong> When a market resolves, correct picks earn{" "}
-                    <strong className="text-plains-accent">+{ELO_WIN}</strong> and wrong picks lose{" "}
-                    <strong className="text-plains-danger">{ELO_LOSS}</strong> (MVP tuning).
+                    <strong className="text-foreground">Climb ELO.</strong> Two-outcome markets use{" "}
+                    <strong className="text-foreground">seasonal credits</strong> (pool-based chart). At resolve, ELO
+                    moves by a <strong>contrarian</strong> formula (bigger wins when the crowd leaned away from you) plus{" "}
+                    <strong>streak bonuses</strong> on correct calls. Flat ±{ELO_WIN}/{ELO_LOSS} was the old MVP default.
                   </p>
                   <p>
                     <strong className="text-foreground">Leaderboard.</strong> Global rank is by ELO. Category boards use
@@ -75,13 +84,17 @@ export function HowPlainsWorksTrigger({ className = "" }: { className?: string }
                     <p className="font-mono text-[10px] uppercase tracking-wider text-plains-muted">Rank tiers</p>
                     <ul className="mt-2 grid gap-1 font-mono text-[11px] sm:grid-cols-2">
                       {TIERS.map((t) => (
-                        <li key={t.id} className="flex justify-between gap-2 rounded-md bg-plains-mist/80 px-2 py-1">
-                          <span style={{ color: t.color }}>{t.label}</span>
+                        <li key={t.id} className="flex justify-between gap-2 bg-plains-mist px-2 py-1.5">
+                          <span style={tierLabelStyle(t)}>{t.label}</span>
                           <span className="text-plains-muted">
                             {t.max == null ? `${t.min}+` : `${t.min}–${t.max}`}
                           </span>
                         </li>
                       ))}
+                      <li className="flex justify-between gap-2 bg-plains-mist px-2 py-1.5">
+                        <span style={tierLabelStyle(TOP500_TIER_BASE)}>{TOP500_TIER_BASE.label}</span>
+                        <span className="text-plains-muted">Global rank 1–500</span>
+                      </li>
                     </ul>
                   </div>
                   <p className="text-xs italic">
@@ -89,7 +102,7 @@ export function HowPlainsWorksTrigger({ className = "" }: { className?: string }
                   </p>
                 </div>
               </div>
-              <div className="shrink-0 border-t border-plains-border bg-plains-panel px-6 py-4">
+              <div className="shrink-0 border-t border-plains-border/15 bg-plains-panel px-6 py-4">
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
@@ -109,7 +122,7 @@ export function HowPlainsWorksTrigger({ className = "" }: { className?: string }
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`rounded-md border border-plains-border bg-plains-panel px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-plains-muted transition hover:border-plains-accent/50 hover:text-plains-void ${className}`}
+        className={`rounded-sm bg-plains-mist px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-plains-muted transition hover:bg-plains-containerHigh hover:text-plains-void ${className}`}
       >
         How it works
       </button>

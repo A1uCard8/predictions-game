@@ -1,4 +1,5 @@
 import { EloExplainPanel } from "@/components/EloExplainPanel";
+import { LeaderboardMeCard } from "@/components/LeaderboardMeCard";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
 import { CATEGORIES, CATEGORY_LEADER_MIN_PREDICTIONS } from "@/lib/constants";
 import { getCategoryLeaderboard, getGlobalLeaderboard } from "@/lib/leaderboard";
@@ -39,33 +40,51 @@ export default async function LeaderboardPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <h1 className="text-3xl font-bold">Leaderboard</h1>
-      <p className="mt-2 text-sm text-plains-muted">
-        {category
-          ? `${category} — ranked by win % (min ${CATEGORY_LEADER_MIN_PREDICTIONS} resolved in category)`
-          : "Global — ranked by ELO"}
-      </p>
+  const myRow = user ? rows.find((r) => r.user_id === user.id) : undefined;
+  const myGlobalRank = user ? globalRanks.get(user.id) : undefined;
 
-      <div className="mt-6 flex flex-wrap gap-2">
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <div>
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-plains-muted">Plains</p>
+          <h1 className="font-headline mt-2 text-3xl font-bold tracking-tight text-plains-void sm:text-4xl">
+            Global rankings
+          </h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-plains-muted">
+            Competitive skill ladder: ELO from contrarian-weighted resolution on your picks, plus seasonal credits on
+            two-outcome markets. Category boards use win % with at least {CATEGORY_LEADER_MIN_PREDICTIONS} resolved in
+            that category.
+          </p>
+        </div>
+        {myRow && myGlobalRank != null ? (
+          <div className="w-full max-w-[280px] shrink-0">
+            <LeaderboardMeCard row={myRow} globalRank={myGlobalRank} />
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-8 flex flex-wrap items-center gap-2">
+        <span className="mr-2 font-mono text-[10px] font-bold uppercase tracking-wider text-plains-muted">Scope</span>
         <Link
           href="/leaderboard"
-          className={`rounded-md px-3 py-1.5 text-xs font-mono ${
-            !category ? "bg-plains-accent/20 text-plains-accent" : "border border-plains-border text-plains-muted"
+          className={`rounded-full px-3 py-1.5 text-xs font-mono font-semibold ${
+            !category ? "bg-plains-primary text-white" : "border border-plains-border text-plains-muted hover:bg-plains-mist"
           }`}
         >
-          Global
+          All
         </Link>
         {CATEGORIES.map((c) => (
           <Link
             key={c}
             href={`/leaderboard?scope=${encodeURIComponent(c)}`}
-            className={`rounded-md px-3 py-1.5 text-xs font-mono ${
-              category === c ? "bg-plains-accent/20 text-plains-accent" : "border border-plains-border text-plains-muted"
+            className={`rounded-full px-3 py-1.5 text-xs font-mono font-semibold ${
+              category === c
+                ? "bg-plains-primary text-white"
+                : "border border-plains-border text-plains-muted hover:bg-plains-mist"
             }`}
           >
-            {c}
+            {c.split("/")[0]}
           </Link>
         ))}
       </div>

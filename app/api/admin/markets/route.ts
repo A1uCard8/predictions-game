@@ -63,3 +63,55 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ id: data.id });
 }
+
+/**
+ * Delete a manually created market (no external_source). Cascades predictions; elo_history.market_id → null.
+ * Refuses synced rows (yahoo, vlr, dome, etc.) so ingest markets are not removed by mistake.
+ */
+export async function DELETE(request: Request) {
+  if (!checkAdmin(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: { market_id?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const marketId = body.market_id?.trim();
+  if (!marketId) {
+    return NextResponse.json({ error: "market_id required" }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+  const { data: row, error: fetchErr } = await admin
+    .from("markets")
+    .select("id, external_source, title")
+    .eq("id", marketId)
+    .maybeSingle();
+
+  if (fetchErr) {
+    return NextResponse.json({ error: fetchErr.message }, { status: 500 });
+  }
+  if (!row) {
+    return NextResponse.json({ error: "Market not found" }, { status: 404 });
+  }
+  if (row.external_source != null) {
+    return NextResponse.json(
+      {
+        error:
+          "This market is tied to an external feed (external_source is set). Delete only manual markets from the admin panel, or run SQL in Supabase if you must remove a synced row.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const { error: delErr } = await admin.from("markets").delete().eq("id", marketId);
+  if (delErr) {
+    return NextResponse.json({ error: delErr.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, deleted: row.title });
+}

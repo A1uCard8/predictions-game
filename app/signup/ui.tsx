@@ -26,7 +26,7 @@ export function SignupForm() {
     }
     setMsg("Check your email to confirm, or continue if confirmations are disabled.");
     router.refresh();
-    setTimeout(() => router.push("/dashboard"), 1500);
+    setTimeout(() => router.push("/portfolio"), 1500);
   }
 
   async function google() {
@@ -34,7 +34,7 @@ export function SignupForm() {
     const origin = window.location.origin;
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${origin}/auth/callback?next=/dashboard` },
+      options: { redirectTo: `${origin}/auth/callback?next=/portfolio` },
     });
   }
 

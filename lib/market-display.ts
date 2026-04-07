@@ -1,6 +1,16 @@
 import type { MarketRow } from "./types";
 
-export function marketImageUrl(market: Pick<MarketRow, "metadata" | "category">): string | null {
+/** Default art for ingested feeds (files in /public). */
+const YAHOO_IMAGE = "/bull.jpg";
+const VLR_IMAGE = "/vct.jpg";
+
+export function marketImageUrl(
+  market: Pick<MarketRow, "metadata" | "category" | "external_source">,
+): string | null {
+  const src = market.external_source;
+  if (src === "yahoo") return YAHOO_IMAGE;
+  if (src === "vlr") return VLR_IMAGE;
+
   const m = (market.metadata ?? {}) as Record<string, unknown>;
   const url = m.image_url ?? m.imageUrl ?? m.thumbnail;
   if (typeof url === "string" && url.startsWith("http")) return url;

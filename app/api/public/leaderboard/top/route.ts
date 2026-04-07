@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const admin = createAdminClient();
     const { data, error } = await admin
       .from("users")
-      .select("username, avatar_url, elo")
+      .select("username, avatar_url, elo, credits, current_streak")
       .order("elo", { ascending: false })
       .limit(limit);
 

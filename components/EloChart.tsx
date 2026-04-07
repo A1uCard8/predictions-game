@@ -47,10 +47,10 @@ export function EloChart({ data }: { data: Point[] }) {
           <Line
             type="monotone"
             dataKey="elo"
-            stroke="#e8b923"
+            stroke="#0052ff"
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 4, fill: "#e8b923" }}
+            activeDot={{ r: 4, fill: "#0052ff" }}
           />
         </LineChart>
       </ResponsiveContainer>

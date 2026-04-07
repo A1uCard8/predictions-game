@@ -1,11 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { HomeLeaderboardLive } from "@/components/HomeLeaderboardLive";
 import { HomeSpotlight } from "@/components/HomeSpotlight";
 import { MarketCard } from "@/components/MarketCard";
-import { RotatingInstitutions } from "@/components/RotatingInstitutions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { getMarketHistoryBootstrap } from "@/lib/market-history";
 import { getMarketPulse } from "@/lib/market-pulse";
 import { loadOpenMarketsByActivity } from "@/lib/home-markets";
 import type { MarketRow } from "@/lib/types";
@@ -30,19 +29,6 @@ async function teaserRows() {
   }
 }
 
-async function openMarketStats() {
-  try {
-    const admin = createAdminClient();
-    const { count } = await admin
-      .from("markets")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "open");
-    return count ?? 0;
-  } catch {
-    return null;
-  }
-}
-
 export default async function Home() {
   let loggedIn = false;
   try {
@@ -54,78 +40,63 @@ export default async function Home() {
   }
 
   const top = await teaserRows();
-  const openCount = await openMarketStats();
   const { sorted, stats } = await loadOpenMarketsByActivity();
   const spotlight = sorted[0] ?? null;
   const featured = spotlight ? sorted.filter((m) => m.id !== spotlight.id).slice(0, 6) : sorted.slice(0, 6);
 
   const initialPulse = spotlight ? await getMarketPulse(spotlight.id) : null;
 
-  return (
-    <div className="relative flex min-h-[calc(100dvh-6.5rem)] flex-col overflow-hidden bg-[#f4f6fa]">
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute inset-0">
-          <Image
-            src="/yellow.jpg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover opacity-[0.34]"
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-white/88 via-white/72 to-white/92" />
-        <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-plains-accent/[0.06]" />
-        <div className="landing-hud-grid absolute inset-0 opacity-[0.14]" />
-      </div>
+  let spotlightHistory: Awaited<ReturnType<typeof getMarketHistoryBootstrap>> | null = null;
+  if (spotlight && marketOptions(spotlight).length === 2) {
+    try {
+      const admin = createAdminClient();
+      spotlightHistory = await getMarketHistoryBootstrap(admin, spotlight.id);
+    } catch {
+      spotlightHistory = null;
+    }
+  }
 
-      <div className="relative z-10 flex flex-1 flex-col px-4 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-12">
-        <div className="mx-auto w-full max-w-6xl rounded-3xl border border-plains-border/60 bg-white/78 px-6 py-12 shadow-[0_1px_0_rgba(15,20,25,0.04),0_24px_48px_-12px_rgba(15,20,25,0.08)] backdrop-blur-xl sm:px-12 sm:py-14 ring-1 ring-black/[0.03]">
-          <div className="text-center">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-plains-muted">
-              Plains
-            </p>
-            <h1 className="home-display mt-3 text-balance text-4xl text-plains-void sm:text-5xl lg:text-[3.25rem] lg:leading-[1.08]">
-              Competitive Prediction Markets
+  return (
+    <div className="min-h-[calc(100dvh-6.5rem)] bg-plains-app">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-plains-muted">Trending</p>
+            <h1 className="font-headline mt-1 text-xl font-bold tracking-tight text-plains-void sm:text-2xl">
+              Top market right now
             </h1>
-            <div className="mx-auto mt-5 flex max-w-xl justify-center">
-              <RotatingInstitutions tone="light" compact />
-            </div>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/markets"
-                className="btn-primary rounded-xl px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.14em]"
-              >
-                Browse markets
-              </Link>
-              {!loggedIn ? (
-                <>
-                  <Link
-                    href="/signup"
-                    className="btn-ghost rounded-xl border-plains-border/90 bg-white/90 px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] shadow-sm"
-                  >
-                    Sign up
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="text-[11px] font-semibold uppercase tracking-[0.1em] text-plains-muted transition hover:text-plains-void"
-                  >
-                    Log in
-                  </Link>
-                </>
-              ) : (
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/markets"
+              className="rounded-full border border-plains-border bg-white px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-plains-void transition hover:border-plains-primary hover:text-plains-primaryHi"
+            >
+              All markets
+            </Link>
+            {!loggedIn ? (
+              <>
                 <Link
-                  href="/dashboard"
-                  className="btn-ghost rounded-xl border-plains-border/90 bg-white/90 px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] shadow-sm"
+                  href="/login"
+                  className="rounded-full px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-plains-muted transition hover:text-plains-void"
                 >
-                  My History
+                  Log in
                 </Link>
-              )}
-            </div>
+                <Link href="/signup" className="btn-primary rounded-full px-5 py-2 text-[10px]">
+                  Sign up
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/portfolio"
+                className="btn-primary rounded-full px-5 py-2 text-[10px] font-bold uppercase tracking-wider"
+              >
+                Portfolio
+              </Link>
+            )}
           </div>
         </div>
 
-        <div className="mx-auto mt-8 grid w-full max-w-6xl gap-5 lg:grid-cols-[1fr_minmax(260px,320px)] lg:items-stretch lg:gap-6">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_minmax(260px,300px)] lg:items-start">
           <div className="min-w-0">
             {spotlight ? (
               <HomeSpotlight
@@ -141,39 +112,44 @@ export default async function Home() {
                       }
                     : null
                 }
+                creditHistory={
+                  marketOptions(spotlight).length === 2
+                    ? (spotlightHistory ?? { points: [], yes: 0, no: 0 })
+                    : undefined
+                }
               />
             ) : (
-              <div className="flex min-h-[320px] flex-col items-center justify-center rounded-3xl border border-dashed border-plains-border/80 bg-white/85 p-8 text-center shadow-[0_1px_0_rgba(15,20,25,0.04),0_16px_40px_-16px_rgba(15,20,25,0.07)] backdrop-blur-xl ring-1 ring-black/[0.02]">
-                <p className="text-sm font-semibold tracking-tight text-plains-void">No open markets yet.</p>
-                <p className="mt-2 text-xs leading-relaxed text-plains-muted">Check back soon or create one from the desk.</p>
-                <Link href="/markets" className="btn-primary mt-6 px-6 py-2 text-xs uppercase tracking-wider">
-                  Markets hub
+              <div className="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-plains-border bg-white/80 p-10 text-center">
+                <p className="font-headline font-semibold text-plains-void">No open markets yet.</p>
+                <p className="mt-2 max-w-sm text-sm text-plains-muted">Check back soon.</p>
+                <Link href="/markets" className="btn-primary mt-6 rounded-full px-6 py-2 text-[10px]">
+                  Browse hub
                 </Link>
               </div>
             )}
           </div>
-          <div className="min-h-[420px] lg:min-h-0">
+          <aside className="min-h-[360px] lg:min-h-0">
             <HomeLeaderboardLive initial={top as { username: string; avatar_url: string | null; elo: number }[]} />
-          </div>
+          </aside>
         </div>
 
-        <section className="relative z-10 mx-auto mt-12 w-full max-w-6xl pb-10 sm:mt-14">
+        <section className="mt-12 border-t border-plains-border/20 pt-10">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="home-section-title text-xl text-plains-void sm:text-2xl">Trending markets</h2>
-              <p className="mt-1.5 text-sm leading-relaxed text-plains-muted">Most player activity right now.</p>
+              <h2 className="font-headline text-lg font-bold text-plains-void sm:text-xl">More markets</h2>
+              <p className="mt-1 text-sm text-plains-muted">High activity picks below.</p>
             </div>
             <Link
               href="/markets"
-              className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-plains-accent transition hover:underline"
+              className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-plains-primaryHi transition hover:underline"
             >
               View all →
             </Link>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {featured.length === 0 ? (
-              <p className="col-span-full rounded-2xl border border-dashed border-plains-border/80 bg-white/75 py-12 text-center text-sm text-plains-muted backdrop-blur-md ring-1 ring-black/[0.02]">
-                More markets loading soon.
+              <p className="col-span-full rounded-xl border border-plains-border/40 bg-white py-12 text-center text-sm text-plains-muted">
+                More markets soon.
               </p>
             ) : (
               featured.map((m) => {
@@ -192,18 +168,6 @@ export default async function Home() {
             )}
           </div>
         </section>
-      </div>
-
-      <div className="pointer-events-none absolute bottom-6 right-5 z-20 hidden sm:block md:right-8">
-        <div className="flex items-stretch overflow-hidden rounded-xl border border-plains-border/80 bg-white/92 shadow-[0_8px_30px_-8px_rgba(15,20,25,0.12)] backdrop-blur-md ring-1 ring-black/[0.03]">
-          <div className="w-1 bg-gradient-to-b from-plains-accent to-plains-accentDim" aria-hidden />
-          <div className="px-4 py-3.5">
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-plains-accent">Open markets</p>
-            <p className="mt-1 font-mono text-2xl font-semibold tabular-nums tracking-tight text-plains-void">
-              {openCount != null ? openCount.toLocaleString() : "—"}
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

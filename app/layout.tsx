@@ -1,19 +1,26 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -29,6 +36,7 @@ export default async function RootLayout({
   let user: { email?: string; id?: string } | null = null;
   let profileUsername: string | null = null;
   let profileAvatarUrl: string | null = null;
+  let profileCredits: number | null = null;
   try {
     const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
@@ -36,11 +44,12 @@ export default async function RootLayout({
     if (user?.id) {
       const { data: row } = await supabase
         .from("users")
-        .select("username, avatar_url")
+        .select("username, avatar_url, credits, current_streak")
         .eq("id", user.id)
         .maybeSingle();
       profileUsername = row?.username ?? null;
       profileAvatarUrl = row?.avatar_url ?? null;
+      profileCredits = typeof row?.credits === "number" ? row.credits : null;
     }
   } catch {
     /* missing env during build */
@@ -49,9 +58,14 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased bg-plains-app text-foreground`}
+        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-plains-canvas font-sans text-foreground antialiased`}
       >
-        <SiteNav user={user} profileUsername={profileUsername} profileAvatarUrl={profileAvatarUrl} />
+        <SiteNav
+          user={user}
+          profileUsername={profileUsername}
+          profileAvatarUrl={profileAvatarUrl}
+          profileCredits={profileCredits}
+        />
         {children}
         <SiteFooter />
       </body>

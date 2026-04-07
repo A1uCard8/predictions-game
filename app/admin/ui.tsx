@@ -20,6 +20,7 @@ export function AdminPanel() {
 
   const [resolveMarketId, setResolveMarketId] = useState("");
   const [correctOption, setCorrectOption] = useState("");
+  const [deleteMarketId, setDeleteMarketId] = useState("");
 
   async function createMarket(e: React.FormEvent) {
     e.preventDefault();
@@ -124,6 +125,33 @@ export function AdminPanel() {
       return;
     }
     setMsg(`Resolved. Updated ${data.updated} predictions.`);
+  }
+
+  async function deleteMarket(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setMsg(null);
+    const id = deleteMarketId.trim();
+    if (!id) {
+      setErr("Enter market UUID");
+      return;
+    }
+    if (!window.confirm("Permanently delete this market and all its predictions?")) return;
+    const res = await fetch("/api/admin/markets", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Password": password,
+      },
+      body: JSON.stringify({ market_id: id }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErr(data.error ?? "Delete failed");
+      return;
+    }
+    setMsg(`Deleted: ${data.deleted ?? id}`);
+    setDeleteMarketId("");
   }
 
   return (
@@ -231,6 +259,27 @@ export function AdminPanel() {
         />
         <button type="submit" className="rounded-lg border border-plains-accent/50 px-4 py-2 font-mono text-plains-accent hover:bg-plains-accent/10">
           Resolve & apply ELO
+        </button>
+      </form>
+
+      <form onSubmit={deleteMarket} className="space-y-4 rounded-xl border border-plains-danger/30 bg-plains-panel/50 p-6">
+        <h2 className="font-mono text-sm uppercase tracking-wider text-plains-danger">Delete market</h2>
+        <p className="text-xs text-plains-muted">
+          Only <strong className="text-foreground">manual</strong> markets (created here, no external feed) can be deleted.
+          Copy the market UUID from the URL <code className="text-plains-accent">/markets/&lt;uuid&gt;</code> or from
+          Supabase.
+        </p>
+        <input
+          placeholder="Market UUID to delete"
+          value={deleteMarketId}
+          onChange={(e) => setDeleteMarketId(e.target.value)}
+          className="w-full rounded-lg border border-plains-border bg-white px-3 py-2 font-mono text-sm outline-none"
+        />
+        <button
+          type="submit"
+          className="rounded-lg border border-plains-danger/60 px-4 py-2 font-mono text-sm text-plains-danger hover:bg-plains-danger/10"
+        >
+          Delete market
         </button>
       </form>
 

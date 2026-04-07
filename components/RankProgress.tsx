@@ -1,4 +1,4 @@
-import { ladderProgress } from "@/lib/tiers";
+import { ladderProgress, tierLabelStyle } from "@/lib/tiers";
 
 export function RankProgress({ elo }: { elo: number }) {
   const { current, next, progressToNext } = ladderProgress(elo);
@@ -6,7 +6,7 @@ export function RankProgress({ elo }: { elo: number }) {
   return (
     <div className="rounded-xl border border-plains-border bg-plains-mist/50 p-4">
       <div className="flex items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-wider text-plains-muted">
-        <span style={{ color: current.color }}>{current.label}</span>
+        <span style={tierLabelStyle(current)}>{current.label}</span>
         {next ? <span className="text-foreground/80">→ {next.label}</span> : <span>Peak tier</span>}
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-plains-border/80">

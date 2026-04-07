@@ -92,7 +92,7 @@ export function RotatingInstitutions({
   const glow =
     tone === "hero" || tone === "light"
       ? phase < 1
-        ? "0 0 14px rgba(232,185,35,0.4)"
+        ? "0 0 16px rgba(0, 82, 255, 0.35)"
         : undefined
       : undefined;
 
@@ -103,7 +103,7 @@ export function RotatingInstitutions({
   return (
     <p className={`${wrap} ${muted}`}>
       <span className={lead}>Ranked predictions from the best of the best at…</span>{" "}
-      <span className="font-mono text-sm font-semibold text-plains-accentDim tabular-nums" style={{ textShadow: glow }}>
+      <span className="font-mono text-sm font-bold text-plains-secondary tabular-nums" style={{ textShadow: glow }}>
         {display}
       </span>
     </p>

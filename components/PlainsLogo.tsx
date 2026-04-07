@@ -1,7 +1,7 @@
 export function PlainsLogo({ className = "" }: { className?: string }) {
   return (
     <span
-      className={`font-mono text-lg font-bold uppercase tracking-[0.15em] text-plains-accent ${className}`}
+      className={`font-headline text-lg font-bold uppercase tracking-tighter text-plains-primaryHi ${className}`}
     >
       Plains
     </span>

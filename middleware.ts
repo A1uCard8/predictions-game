@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const protectedPrefixes = ["/dashboard", "/settings", "/admin"];
+const protectedPrefixes = ["/portfolio", "/dashboard", "/settings", "/admin"];
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request: { headers: request.headers } });

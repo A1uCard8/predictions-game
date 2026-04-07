@@ -1,8 +1,14 @@
+"use client";
+
+import { useId } from "react";
 import type { TierId } from "@/lib/tiers";
 
 const common = "h-3.5 w-3.5 shrink-0";
 
 export function TierIcon({ id }: { id: TierId }) {
+  const raw = useId();
+  const uid = raw.replace(/:/g, "");
+
   switch (id) {
     case "bronze":
       return (
@@ -42,16 +48,47 @@ export function TierIcon({ id }: { id: TierId }) {
           <circle cx="8" cy="8" r="2" fill="#fb7185" />
         </svg>
       );
-    case "grandmaster":
-    case "top500":
+    case "grandmaster": {
+      const g = `gm-${uid}`;
       return (
         <svg className={common} viewBox="0 0 16 16" fill="none" aria-hidden>
+          <defs>
+            <linearGradient id={g} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#00ffb3" />
+              <stop offset="18%" stopColor="#00a8ff" />
+              <stop offset="36%" stopColor="#6366f1" />
+              <stop offset="52%" stopColor="#ec4899" />
+              <stop offset="68%" stopColor="#fb923c" />
+              <stop offset="84%" stopColor="#22d3ee" />
+              <stop offset="100%" stopColor="#00ffb3" />
+            </linearGradient>
+          </defs>
           <path
             d="M8 1l1.8 4.2L14 6.3l-3.2 3.1.8 4.6L8 11.9 4.4 14l.8-4.6L2 6.3l4.2-1.1L8 1z"
-            fill={id === "top500" ? "#ffd700" : "#e8b923"}
+            fill={`url(#${g})`}
           />
         </svg>
       );
+    }
+    case "top500": {
+      const g = `t5-${uid}`;
+      return (
+        <svg className={common} viewBox="0 0 16 16" fill="none" aria-hidden>
+          <defs>
+            <linearGradient id={g} x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="30%" stopColor="#ea580c" />
+              <stop offset="58%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#fef9c3" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M8 1l1.8 4.2L14 6.3l-3.2 3.1.8 4.6L8 11.9 4.4 14l.8-4.6L2 6.3l4.2-1.1L8 1z"
+            fill={`url(#${g})`}
+          />
+        </svg>
+      );
+    }
     default:
       return null;
   }

@@ -30,7 +30,7 @@ export function UserMenu({ email, username, avatarUrl }: Props) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-plains-border bg-plains-mist transition hover:border-plains-accent/60"
+        className="flex h-9 w-9 items-center justify-center overflow-hidden border-2 border-plains-border/30 bg-plains-containerHigh transition hover:border-plains-primary/40"
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Account menu"
@@ -48,38 +48,38 @@ export function UserMenu({ email, username, avatarUrl }: Props) {
       </button>
       {open && (
         <div
-          className="absolute right-0 z-[80] mt-2 w-52 rounded-xl border border-plains-border bg-plains-panel py-1 shadow-lg"
+          className="absolute right-0 z-[80] mt-2 w-52 bg-plains-panel py-1 shadow-glow"
           role="menu"
         >
-          <div className="border-b border-plains-border px-3 py-2">
-            <p className="truncate text-sm font-semibold text-plains-void">{username ?? "Player"}</p>
+          <div className="border-b border-plains-border/15 px-3 py-2">
+            <p className="truncate font-headline text-sm font-bold text-plains-void">{username ?? "Player"}</p>
             {email ? <p className="truncate text-[11px] text-plains-muted">{email}</p> : null}
           </div>
           <Link
             href={profileHref}
-            className="block px-3 py-2 text-sm text-plains-void hover:bg-plains-mist"
+            className="block px-3 py-2 text-sm font-medium text-plains-void hover:bg-plains-mist"
             role="menuitem"
             onClick={() => setOpen(false)}
           >
             Profile
           </Link>
           <Link
-            href="/dashboard"
-            className="block px-3 py-2 text-sm text-plains-void hover:bg-plains-mist"
+            href="/portfolio"
+            className="block px-3 py-2 text-sm font-medium text-plains-void hover:bg-plains-mist"
             role="menuitem"
             onClick={() => setOpen(false)}
           >
-            My History
+            Portfolio
           </Link>
           <Link
             href="/settings"
-            className="block px-3 py-2 text-sm text-plains-void hover:bg-plains-mist"
+            className="block px-3 py-2 text-sm font-medium text-plains-void hover:bg-plains-mist"
             role="menuitem"
             onClick={() => setOpen(false)}
           >
             Settings
           </Link>
-          <form action="/api/auth/signout" method="post" className="border-t border-plains-border">
+          <form action="/api/auth/signout" method="post" className="border-t border-plains-border/15">
             <button
               type="submit"
               className="w-full px-3 py-2 text-left text-sm text-plains-danger hover:bg-plains-mist"

@@ -28,27 +28,27 @@ export function HomeLeaderboardLive({ initial }: { initial: Row[] }) {
   }, []);
 
   return (
-    <div className="flex h-full flex-col rounded-3xl border border-plains-border/70 bg-white/88 p-4 shadow-[0_1px_0_rgba(15,20,25,0.04),0_20px_50px_-20px_rgba(15,20,25,0.1)] backdrop-blur-xl ring-1 ring-black/[0.03] sm:p-5">
-      <div className="flex items-center justify-between border-b border-plains-border/90 pb-3">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-plains-accent">Global top 10</p>
+    <div className="flex h-full flex-col bg-plains-mist p-4 shadow-stitch transition-colors hover:bg-plains-panel sm:p-5">
+      <div className="flex items-center justify-between border-b border-plains-border/15 pb-3">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-plains-secondary">Global top 10</p>
         <Link
           href="/leaderboard"
-          className="text-[10px] font-semibold tracking-tight text-plains-muted transition hover:text-plains-accent"
+          className="font-mono text-[10px] font-bold tracking-tight text-plains-muted transition hover:text-plains-primaryHi"
         >
           Full ladder →
         </Link>
       </div>
-      <ul className="mt-3 flex-1 space-y-2">
+      <ul className="mt-3 flex-1 space-y-[1px] bg-plains-border/10">
         {rows.length === 0 && (
-          <li className="py-6 text-center text-sm text-plains-muted">No players yet — be first.</li>
+          <li className="bg-plains-mist py-6 text-center text-sm text-plains-muted">No players yet — be first.</li>
         )}
         {rows.map((row, i) => (
           <li
             key={`${row.username}-${i}`}
-            className="flex items-center gap-3 rounded-xl border border-plains-border/60 bg-white/70 px-3 py-2 shadow-sm"
+            className="flex items-center gap-3 bg-plains-mist px-3 py-2.5 transition hover:bg-plains-panel"
           >
-            <span className="w-6 font-mono text-[10px] text-plains-muted">#{i + 1}</span>
-            <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-plains-border/50">
+            <span className="w-6 font-mono text-[10px] font-bold text-plains-muted">#{i + 1}</span>
+            <div className="relative h-8 w-8 shrink-0 overflow-hidden bg-plains-containerHigh">
               {row.avatar_url ? (
                 row.avatar_url.includes("supabase.co") ? (
                   <Image src={row.avatar_url} alt="" fill className="object-cover" sizes="32px" />
@@ -57,22 +57,22 @@ export function HomeLeaderboardLive({ initial }: { initial: Row[] }) {
                   <img src={row.avatar_url} alt="" className="h-full w-full object-cover" />
                 )
               ) : (
-                <span className="flex h-full w-full items-center justify-center font-mono text-[10px] text-plains-muted">
+                <span className="flex h-full w-full items-center justify-center font-mono text-[10px] font-bold text-plains-muted">
                   {row.username.slice(0, 2).toUpperCase()}
                 </span>
               )}
             </div>
             <Link
               href={`/profile/${encodeURIComponent(row.username)}`}
-              className="min-w-0 flex-1 truncate text-sm font-semibold tracking-tight text-plains-void hover:text-plains-accent"
+              className="min-w-0 flex-1 truncate font-headline text-sm font-bold tracking-tight text-plains-void hover:text-plains-primaryHi"
             >
               {row.username}
             </Link>
-            <span className="shrink-0 font-mono text-sm tabular-nums text-plains-accent">{row.elo}</span>
+            <span className="shrink-0 font-mono text-sm font-bold tabular-nums text-plains-secondary">{row.elo}</span>
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-center text-[10px] text-plains-muted">Updates every ~12s</p>
+      <p className="mt-3 text-center font-mono text-[10px] text-plains-muted">Updates every ~12s</p>
     </div>
   );
 }

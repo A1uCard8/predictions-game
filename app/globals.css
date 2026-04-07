@@ -3,40 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --background: #e8eef8;
-  --foreground: #0f1419;
+  --background: #fbf9f8;
+  --foreground: #1b1c1c;
   --card: #ffffff;
-  --card-border: #d4dce8;
+  --card-border: #c3c5d9;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  .font-headline {
+    font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  }
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Homepage / marketing display — tight, modern headline rhythm */
-.home-display {
-  letter-spacing: -0.035em;
-  font-weight: 600;
-  line-height: 1.05;
-}
-
-.home-section-title {
-  letter-spacing: -0.02em;
-  font-weight: 600;
-}
-
-/* Soft radial “heavenly” wash (Polymarket-adjacent clarity, Plains-owned palette) */
+/* App shell — subtle primary wash (Stitch “spectral” light) */
 .bg-plains-app {
-  background-color: var(--background);
+  background-color: #fbf9f8;
   background-image:
-    radial-gradient(1200px 800px at 10% -10%, rgba(232, 185, 35, 0.1), transparent 55%),
-    radial-gradient(900px 600px at 90% 0%, rgba(147, 180, 255, 0.18), transparent 50%),
-    radial-gradient(800px 500px at 50% 100%, rgba(255, 255, 255, 0.9), transparent 45%);
+    radial-gradient(1000px 700px at 8% -8%, rgba(0, 82, 255, 0.06), transparent 55%),
+    radial-gradient(800px 500px at 92% 0%, rgba(122, 42, 214, 0.05), transparent 50%);
 }
 
 @layer utilities {
@@ -53,28 +49,39 @@ body {
   }
 }
 
-/* Legacy utility (other pages) */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(232, 185, 35, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(232, 185, 35, 0.07) 1px, transparent 1px);
+    linear-gradient(rgba(0, 62, 199, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 62, 199, 0.04) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
-/* Landing hero (light variant uses accent-tinted grid) */
 .landing-hud-grid {
   background-image:
-    linear-gradient(rgba(232, 185, 35, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(232, 185, 35, 0.08) 1px, transparent 1px);
+    linear-gradient(rgba(0, 62, 199, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 62, 199, 0.035) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
 }
 
-/* Primary control: tactile feedback */
+.home-display {
+  letter-spacing: -0.035em;
+  font-weight: 600;
+  line-height: 1.05;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.home-section-title {
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+/* Primary CTA — Stitch gradient 135° */
 .btn-primary {
-  @apply rounded-lg bg-gradient-to-b from-plains-accent to-plains-accentDim font-mono font-semibold text-plains-void shadow-glow transition hover:opacity-95 active:scale-[0.99] active:brightness-95;
+  @apply rounded-sm bg-gradient-to-br from-plains-primary to-plains-primaryHi font-mono font-bold uppercase tracking-widest text-white shadow-glow transition hover:opacity-95 active:scale-[0.99];
 }
 
 .btn-ghost {
-  @apply rounded-lg border border-plains-border bg-plains-panel font-medium text-foreground transition hover:border-plains-accent/50 hover:bg-plains-mist/80 active:scale-[0.99];
+  @apply rounded-sm bg-plains-containerHigh font-medium text-foreground transition hover:bg-plains-containerHighest active:scale-[0.99];
 }

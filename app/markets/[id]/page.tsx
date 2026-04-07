@@ -2,6 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { MarketPredictForm } from "@/components/MarketPredictForm";
+import { MarketProbabilityChart } from "@/components/MarketProbabilityChart";
+import { isBinaryMarket } from "@/lib/betting";
+import { getMarketHistoryBootstrap } from "@/lib/market-history";
 import { batchMarketPickStats } from "@/lib/market-stats";
 import { marketImageUrl, marketResolutionCriteria, formatTimeRemaining } from "@/lib/market-display";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -13,6 +16,11 @@ type ActivityRow = {
   chosen_option: string;
   username: string;
 };
+
+function formatPickCount(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return String(n);
+}
 
 export default async function MarketPage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
@@ -28,6 +36,7 @@ export default async function MarketPage({ params }: { params: { id: string } })
   } = await supabase.auth.getUser();
 
   let chosen: string | null = null;
+  let creditsBalance = 0;
   if (user) {
     const { data: pred } = await supabase
       .from("predictions")
@@ -36,6 +45,9 @@ export default async function MarketPage({ params }: { params: { id: string } })
       .eq("user_id", user.id)
       .maybeSingle();
     chosen = pred?.chosen_option ?? null;
+
+    const { data: urow } = await supabase.from("users").select("credits").eq("id", user.id).maybeSingle();
+    if (typeof urow?.credits === "number") creditsBalance = urow.credits;
   }
 
   const closedByTime = Date.now() >= new Date(m.close_date).getTime();
@@ -90,160 +102,234 @@ export default async function MarketPage({ params }: { params: { id: string } })
     activity = [];
   }
 
+  const binary = isBinaryMarket(options);
+  const ty = Number(m.total_yes_credits ?? 0);
+  const tn = Number(m.total_no_credits ?? 0);
+  let historyBoot: Awaited<ReturnType<typeof getMarketHistoryBootstrap>> | null = null;
+  if (binary) {
+    try {
+      const admin = createAdminClient();
+      historyBoot = await getMarketHistoryBootstrap(admin, m.id);
+    } catch {
+      historyBoot = null;
+    }
+  }
+  const poolTotal = ty + tn;
+  const yesProbBoot = poolTotal > 0 ? ty / poolTotal : 0.5;
+  const noProbBoot = poolTotal > 0 ? tn / poolTotal : 0.5;
+
   const criteria = marketResolutionCriteria(m);
   const img = marketImageUrl(m);
   const timeLeft = formatTimeRemaining(m.close_date);
 
+  const yesOpt = options.find((o) => /^yes$/i.test(o.trim()));
+  const chancePct =
+    binary && poolTotal > 0
+      ? Math.round(yesProbBoot * 1000) / 10
+      : yesOpt && pickStats.count > 0
+        ? dist.find((d) => d.option === yesOpt)?.pct ?? null
+        : options.length === 2
+          ? dist[0]?.pct ?? null
+          : pickStats.topPct;
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <div className="flex flex-wrap gap-3 text-sm">
-        <Link href="/markets" className="text-plains-muted transition hover:text-plains-accent">
-          ← All markets
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+      <div className="flex flex-wrap gap-4 font-mono text-[10px] font-bold uppercase tracking-wide text-plains-muted">
+        <Link href="/markets" className="transition hover:text-plains-primaryHi">
+          ← Markets
         </Link>
+        <span className="text-plains-border">/</span>
+        <span className="truncate text-plains-outline">{m.category}</span>
         {user ? (
-          <Link href="/dashboard" className="text-plains-muted transition hover:text-plains-accent">
-            Desk
+          <Link href="/portfolio" className="ml-auto transition hover:text-plains-primaryHi">
+            Portfolio
           </Link>
         ) : null}
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-plains-border bg-plains-panel shadow-sm">
-        <div className="relative h-44 w-full bg-plains-mist sm:h-52">
-          {img ? (
-            img.includes("supabase.co") ? (
-              <Image src={img} alt="" fill className="object-cover" sizes="100vw" priority />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={img} alt="" className="h-full w-full object-cover" />
-            )
-          ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-plains-heaven to-white">
-              <span className="font-mono text-6xl font-bold text-plains-accent/25">?</span>
-            </div>
-          )}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-plains-void/80 to-transparent px-4 pb-3 pt-12">
-            <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-white/85">
-              <span>{m.category}</span>
-              <span>·</span>
-              <span>{m.status}</span>
-              {m.status === "open" && (
-                <>
-                  <span>·</span>
-                  <span>{timeLeft}</span>
-                </>
+      <div className="mt-6 lg:grid lg:grid-cols-[1fr_360px] lg:items-start lg:gap-10">
+        <div className="min-w-0 space-y-6">
+          <div className="flex flex-wrap items-start gap-4">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-plains-border bg-plains-container sm:h-20 sm:w-20">
+              {img ? (
+                img.includes("supabase.co") ? (
+                  <Image src={img} alt="" fill className="object-cover" sizes="80px" priority />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={img} alt="" className="h-full w-full object-cover" />
+                )
+              ) : (
+                <div className="flex h-full items-center justify-center font-mono text-2xl text-plains-primary/20">?</div>
               )}
             </div>
-            <h1 className="mt-1 text-xl font-bold text-white sm:text-2xl">{m.title}</h1>
-          </div>
-        </div>
-
-        <div className="space-y-8 p-6 sm:p-8">
-          {m.status === "open" && pickStats.count > 0 && (
-            <section>
-              <h2 className="font-mono text-xs uppercase tracking-wider text-plains-muted">Crowd snapshot</h2>
-              <p className="mt-1 text-sm text-plains-muted">
-                {pickStats.count} locked picks · lean {pickStats.topPct}% {pickStats.topOption}
+            <div className="min-w-0 flex-1">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-plains-muted">
+                {m.category} · {m.status}
+                {m.status === "open" && (
+                  <>
+                    {" "}
+                    · <span className="text-plains-primary">{timeLeft}</span>
+                  </>
+                )}
               </p>
-              <ul className="mt-3 space-y-2">
-                {dist.map((row) => (
-                  <li key={row.option}>
-                    <div className="flex justify-between font-mono text-xs text-plains-muted">
-                      <span className="text-foreground">{row.option}</span>
-                      <span>
-                        {row.pct}% <span className="text-plains-muted">({row.count})</span>
-                      </span>
-                    </div>
-                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-plains-border/60">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-plains-accentDim to-plains-accent"
-                        style={{ width: `${Math.min(100, row.pct)}%` }}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <h1 className="font-headline mt-2 text-2xl font-bold leading-tight tracking-tight text-plains-void sm:text-3xl">
+                {m.title}
+              </h1>
+              <p className="mt-2 text-sm leading-relaxed text-plains-muted">{m.description}</p>
+            </div>
+          </div>
+
+          {binary && m.status === "open" && (
+            <section className="overflow-hidden rounded-xl border border-plains-border/50 bg-white shadow-sm">
+              <MarketProbabilityChart
+                marketId={m.id}
+                optionA={options[0]}
+                optionB={options[1]}
+                initialPoints={historyBoot?.points ?? []}
+                initialProbabilities={{ yes: yesProbBoot, no: noProbBoot }}
+              />
             </section>
           )}
 
-          <section>
-            <h2 className="font-mono text-xs uppercase tracking-wider text-plains-muted">Description</h2>
-            <p className="mt-2 leading-relaxed text-plains-muted">{m.description}</p>
-          </section>
+          <div className="grid gap-4 md:grid-cols-2">
+            <section className="rounded-xl border border-plains-border bg-plains-panel p-5">
+              <h2 className="font-mono text-[10px] font-bold uppercase tracking-widest text-plains-outline">
+                Resolution
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-plains-muted">{criteria}</p>
+              {m.status === "resolved" && m.correct_option && (
+                <p className="mt-4 rounded-md bg-plains-primary/10 px-3 py-2 font-mono text-sm font-bold text-plains-primary">
+                  Outcome: {m.correct_option}
+                </p>
+              )}
+            </section>
+            <section className="rounded-xl border border-plains-border bg-plains-panel p-5">
+              <h2 className="font-mono text-[10px] font-bold uppercase tracking-widest text-plains-outline">Timeline</h2>
+              <ul className="mt-3 space-y-2 text-sm text-plains-muted">
+                <li>
+                  <span className="font-mono text-[9px] uppercase text-plains-outline">Closes</span>{" "}
+                  {new Date(m.close_date).toLocaleString()}
+                </li>
+                <li>
+                  <span className="font-mono text-[9px] uppercase text-plains-outline">Resolves</span>{" "}
+                  {new Date(m.resolution_date).toLocaleString()}
+                </li>
+              </ul>
+            </section>
+          </div>
 
-          <section>
-            <h2 className="font-mono text-xs uppercase tracking-wider text-plains-muted">Resolution criteria</h2>
-            <p className="mt-2 leading-relaxed text-plains-muted">{criteria}</p>
-            {m.status === "resolved" && m.correct_option && (
-              <p className="mt-3 rounded-lg border border-plains-accent/30 bg-plains-accent/5 px-3 py-2 font-mono text-sm text-plains-accent">
-                Resolved: {m.correct_option}
-              </p>
-            )}
-          </section>
+          {m.status === "open" && pickStats.count > 0 && (
+            <section className="rounded-xl border border-plains-border bg-plains-panel p-5">
+              <h2 className="font-mono text-[10px] font-bold uppercase tracking-widest text-plains-outline">
+                Pick distribution
+              </h2>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 font-mono text-xs">
+                  {dist
+                    .slice()
+                    .sort((a, b) => b.count - a.count)
+                    .map((row, i) => (
+                      <div
+                        key={row.option}
+                        className={`flex justify-between ${i === 0 ? "font-bold text-plains-primary" : "text-plains-secondary/90"}`}
+                      >
+                        <span className="truncate pr-2">{row.option}</span>
+                        <span>{formatPickCount(row.count)}</span>
+                      </div>
+                    ))}
+                </div>
+                <ul className="space-y-2">
+                  {dist.map((row, i) => (
+                    <li key={row.option}>
+                      <div className="flex justify-between font-mono text-[11px]">
+                        <span className="font-medium text-plains-void">{row.option}</span>
+                        <span className="text-plains-muted">{row.pct}%</span>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-plains-containerHigh">
+                        <div
+                          className={`h-full rounded-full ${
+                            i % 2 === 0
+                              ? "bg-gradient-to-r from-plains-primary/80 to-plains-primaryHi"
+                              : "bg-plains-secondary/70"
+                          }`}
+                          style={{ width: `${Math.min(100, row.pct)}%` }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
 
-          <section>
-            <h2 className="font-mono text-xs uppercase tracking-wider text-plains-muted">Timeline</h2>
-            <ol className="mt-3 space-y-3 border-l-2 border-plains-border pl-4">
-              <li>
-                <p className="font-mono text-[10px] uppercase text-plains-muted">Created</p>
-                <p className="text-sm">{new Date(m.created_at).toLocaleString()}</p>
-              </li>
-              <li>
-                <p className="font-mono text-[10px] uppercase text-plains-muted">Closes for predictions</p>
-                <p className="text-sm">{new Date(m.close_date).toLocaleString()}</p>
-              </li>
-              <li>
-                <p className="font-mono text-[10px] uppercase text-plains-muted">Scheduled resolution</p>
-                <p className="text-sm">{new Date(m.resolution_date).toLocaleString()}</p>
-              </li>
-            </ol>
-          </section>
-
-          <section>
-            <h2 className="font-mono text-xs uppercase tracking-wider text-plains-muted">Activity</h2>
-            <ul className="mt-3 max-h-72 space-y-2 overflow-y-auto text-sm">
-              {activity.length === 0 && <li className="text-plains-muted">No picks yet.</li>}
+          <section className="rounded-xl border border-plains-border bg-plains-panel p-5">
+            <h2 className="font-mono text-[10px] font-bold uppercase tracking-widest text-plains-outline">Activity</h2>
+            <ul className="mt-3 max-h-64 space-y-[1px] overflow-y-auto">
+              {activity.length === 0 && (
+                <li className="py-4 text-center text-sm text-plains-muted">No picks yet.</li>
+              )}
               {activity.map((a, i) => (
                 <li
                   key={`${a.created_at}-${i}`}
-                  className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-plains-border/80 bg-plains-mist/50 px-3 py-2"
+                  className="flex flex-wrap items-baseline justify-between gap-2 border-b border-plains-border/10 py-2 text-sm last:border-0"
                 >
-                  <span className="font-medium text-plains-void">{a.username}</span>
+                  <span className="font-headline font-bold text-plains-void">{a.username}</span>
                   <span className="text-plains-muted">
-                    chose <span className="text-foreground">{a.chosen_option}</span>
+                    → <span className="text-plains-void">{a.chosen_option}</span>
                   </span>
-                  <span className="w-full font-mono text-[10px] text-plains-muted sm:w-auto sm:text-right">
-                    {new Date(a.created_at).toLocaleString()}
-                  </span>
+                  <span className="w-full font-mono text-[9px] text-plains-muted sm:w-auto">{new Date(a.created_at).toLocaleString()}</span>
                 </li>
               ))}
             </ul>
           </section>
-
-          <div className="border-t border-plains-border pt-8">
-            {!user && (
-              <p className="text-sm text-plains-muted">
-                <Link href="/login" className="text-plains-accent hover:underline">
-                  Log in
-                </Link>{" "}
-                to submit your pick.
-              </p>
-            )}
-            {user && m.status !== "open" && (
-              <p className="text-sm text-plains-muted">This market is no longer accepting predictions.</p>
-            )}
-            {user && closedByTime && m.status === "open" && !chosen && (
-              <p className="text-sm text-plains-danger">Close date passed — no new picks.</p>
-            )}
-            {user && (canPredict || chosen) && (
-              <MarketPredictForm
-                marketId={m.id}
-                options={options}
-                locked={!!chosen || !canPredict}
-                chosen={chosen}
-              />
-            )}
-          </div>
         </div>
+
+        <aside className="mt-8 space-y-4 lg:sticky lg:top-24 lg:mt-0">
+          <div className="rounded-xl border border-plains-border bg-white p-5 shadow-sm">
+            <div className="grid grid-cols-2 gap-4 border-b border-plains-border/15 pb-4">
+              <div>
+                <p className="font-mono text-[9px] font-bold uppercase tracking-wider text-plains-muted">Chance</p>
+                <p className="font-headline mt-1 text-2xl font-black tabular-nums text-plains-primary">
+                  {chancePct != null ? `${chancePct}%` : "—"}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-mono text-[9px] font-bold uppercase tracking-wider text-plains-muted">Pool</p>
+                <p className="font-headline mt-1 text-xl font-bold tabular-nums text-plains-void">
+                  {poolTotal > 0 ? `${poolTotal.toLocaleString()} CR` : "—"}
+                </p>
+                <p className="mt-0.5 font-mono text-[9px] text-plains-muted">Credits staked</p>
+              </div>
+            </div>
+            <div className="pt-4">
+              {!user && (
+                <p className="text-sm text-plains-muted">
+                  <Link href="/login" className="font-bold text-plains-primaryHi hover:underline">
+                    Log in
+                  </Link>{" "}
+                  to lock a pick.
+                </p>
+              )}
+              {user && m.status !== "open" && (
+                <p className="text-sm text-plains-muted">This market is closed to new picks.</p>
+              )}
+              {user && closedByTime && m.status === "open" && !chosen && (
+                <p className="text-sm font-medium text-plains-danger">Close date passed — no new picks.</p>
+              )}
+              {user && (canPredict || chosen) && (
+                <MarketPredictForm
+                  marketId={m.id}
+                  options={options}
+                  locked={!!chosen || !canPredict}
+                  chosen={chosen}
+                  creditsBalance={creditsBalance}
+                  totalYesCredits={ty}
+                  totalNoCredits={tn}
+                />
+              )}
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

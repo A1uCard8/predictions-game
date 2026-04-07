@@ -7,6 +7,8 @@ export type UserRow = {
   username: string;
   avatar_url: string | null;
   elo: number;
+  credits?: number;
+  current_streak?: number;
   created_at: string;
 };
 
@@ -24,6 +26,8 @@ export type MarketRow = {
   external_id: string | null;
   metadata?: Record<string, unknown> | null;
   created_at: string;
+  total_yes_credits?: number;
+  total_no_credits?: number;
 };
 
 export type PredictionRow = {
@@ -33,6 +37,8 @@ export type PredictionRow = {
   chosen_option: string;
   is_correct: boolean | null;
   elo_change: number | null;
+  credits_wagered?: number;
+  pick_implied_p?: number | null;
   created_at: string;
 };
 

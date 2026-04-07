@@ -111,7 +111,7 @@ export default async function MarketsPage({ searchParams }: { searchParams: Sear
           </p>
         </div>
         <Link
-          href="/dashboard"
+          href="/portfolio"
           className="btn-ghost inline-flex w-fit items-center px-4 py-2 text-sm font-mono font-semibold uppercase tracking-wide"
         >
           Your desk →

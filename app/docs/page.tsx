@@ -8,6 +8,11 @@ export default function DocsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <h1 className="text-3xl font-bold text-plains-void">API documentation</h1>
+      <p className="mt-2 text-sm">
+        <a href="/docs/markets" className="font-medium text-plains-primaryHi hover:underline">
+          How markets &amp; events work on Plains →
+        </a>
+      </p>
       <p className="mt-2 text-plains-muted">
         Product vision for a public <strong className="font-medium text-plains-void">Plains data API</strong> (below), plus
         operator routes and integration hooks for this deployment.

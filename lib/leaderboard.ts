@@ -10,6 +10,10 @@ export type LeaderRow = {
   wins: number;
   total: number;
   winPct: number;
+  credits?: number;
+  currentStreak?: number;
+  /** Win % on resolved picks where implied crowd on your side was &lt; 50% (minority / contrarian). */
+  contrarianWinPct: number | null;
 };
 
 function winPct(wins: number, total: number) {
@@ -22,7 +26,7 @@ export async function getGlobalLeaderboard(
 ): Promise<LeaderRow[]> {
   const { data: users, error: uErr } = await admin
     .from("users")
-    .select("id, username, avatar_url, elo")
+    .select("id, username, avatar_url, elo, credits, current_streak")
     .order("elo", { ascending: false });
   if (uErr) throw uErr;
 
@@ -32,6 +36,13 @@ export async function getGlobalLeaderboard(
     .not("is_correct", "is", null);
   if (pErr) throw pErr;
 
+  const { data: contrPreds, error: cErr } = await admin
+    .from("predictions")
+    .select("user_id, is_correct, pick_implied_p")
+    .not("is_correct", "is", null)
+    .not("pick_implied_p", "is", null);
+  if (cErr) throw cErr;
+
   const stats = new Map<string, { wins: number; total: number }>();
   for (const p of preds ?? []) {
     const s = stats.get(p.user_id) ?? { wins: 0, total: 0 };
@@ -40,8 +51,21 @@ export async function getGlobalLeaderboard(
     stats.set(p.user_id, s);
   }
 
+  const contrarian = new Map<string, { wins: number; total: number }>();
+  for (const p of contrPreds ?? []) {
+    const imp = p.pick_implied_p as number | null;
+    if (imp == null || imp >= 0.5) continue;
+    const s = contrarian.get(p.user_id) ?? { wins: 0, total: 0 };
+    s.total++;
+    if (p.is_correct) s.wins++;
+    contrarian.set(p.user_id, s);
+  }
+
   return (users ?? []).map((u, i) => {
     const s = stats.get(u.id) ?? { wins: 0, total: 0 };
+    const c = contrarian.get(u.id);
+    const cw = c?.wins ?? 0;
+    const ct = c?.total ?? 0;
     return {
       rank: i + 1,
       user_id: u.id,
@@ -51,6 +75,9 @@ export async function getGlobalLeaderboard(
       wins: s.wins,
       total: s.total,
       winPct: winPct(s.wins, s.total),
+      credits: typeof u.credits === "number" ? u.credits : undefined,
+      currentStreak: typeof u.current_streak === "number" ? u.current_streak : undefined,
+      contrarianWinPct: ct > 0 ? winPct(cw, ct) : null,
     };
   });
 }
@@ -70,7 +97,7 @@ export async function getCategoryLeaderboard(
 
   const { data: preds, error: pErr } = await admin
     .from("predictions")
-    .select("user_id, is_correct, market_id")
+    .select("user_id, is_correct, market_id, pick_implied_p")
     .not("is_correct", "is", null);
   if (pErr) throw pErr;
 
@@ -90,14 +117,28 @@ export async function getCategoryLeaderboard(
 
   const { data: users, error: uErr } = await admin
     .from("users")
-    .select("id, username, avatar_url, elo");
+    .select("id, username, avatar_url, elo, credits, current_streak");
   if (uErr) throw uErr;
   const byId = new Map((users ?? []).map((u) => [u.id, u]));
+
+  const contrarian = new Map<string, { wins: number; total: number }>();
+  for (const p of preds ?? []) {
+    if (!marketIds.has(p.market_id)) continue;
+    const imp = p.pick_implied_p as number | null | undefined;
+    if (imp == null || imp >= 0.5) continue;
+    const s = contrarian.get(p.user_id) ?? { wins: 0, total: 0 };
+    s.total++;
+    if (p.is_correct) s.wins++;
+    contrarian.set(p.user_id, s);
+  }
 
   const rows: LeaderRow[] = eligible
     .map(([userId, s]) => {
       const u = byId.get(userId);
       if (!u) return null;
+      const c = contrarian.get(userId);
+      const cw = c?.wins ?? 0;
+      const ct = c?.total ?? 0;
       return {
         rank: 0,
         user_id: userId,
@@ -107,6 +148,12 @@ export async function getCategoryLeaderboard(
         wins: s.wins,
         total: s.total,
         winPct: winPct(s.wins, s.total),
+        credits: typeof (u as { credits?: number }).credits === "number" ? (u as { credits?: number }).credits : undefined,
+        currentStreak:
+          typeof (u as { current_streak?: number }).current_streak === "number"
+            ? (u as { current_streak?: number }).current_streak
+            : undefined,
+        contrarianWinPct: ct > 0 ? winPct(cw, ct) : null,
       };
     })
     .filter(Boolean) as LeaderRow[];
