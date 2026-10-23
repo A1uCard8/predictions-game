@@ -9,6 +9,8 @@ import { getMarketPulse } from "@/lib/market-pulse";
 import { loadOpenMarketsByActivity } from "@/lib/home-markets";
 import type { MarketRow } from "@/lib/types";
 
+const KISMET_LAST_ORDER_FLAG = "kismet-show-last-order-on-menu-for-repeat-buyer";
+
 function marketOptions(m: MarketRow): string[] {
   const o = m.options;
   if (!Array.isArray(o)) return [];
@@ -43,6 +45,7 @@ export default async function Home() {
   const { sorted, stats } = await loadOpenMarketsByActivity();
   const spotlight = sorted[0] ?? null;
   const featured = spotlight ? sorted.filter((m) => m.id !== spotlight.id).slice(0, 6) : sorted.slice(0, 6);
+  const showLastOrderTreatment = process.env.NEXT_PUBLIC_KISMET_EXPERIMENT === KISMET_LAST_ORDER_FLAG;
 
   const initialPulse = spotlight ? await getMarketPulse(spotlight.id) : null;
 
@@ -146,6 +149,22 @@ export default async function Home() {
               View all →
             </Link>
           </div>
+          {showLastOrderTreatment ? (
+            <div
+              data-kismet-experiment={KISMET_LAST_ORDER_FLAG}
+              className="mt-6 rounded-2xl border border-plains-border bg-white p-4 shadow-sm"
+            >
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-plains-muted">Last order</p>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-plains-muted">
+                  Repeat buyer? Your last order can be surfaced here so you can reorder it from the menu.
+                </p>
+                <Link href="/markets" className="btn-primary rounded-full px-5 py-2 text-[10px]">
+                  Reorder
+                </Link>
+              </div>
+            </div>
+          ) : null}
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {featured.length === 0 ? (
               <p className="col-span-full rounded-xl border border-plains-border/40 bg-white py-12 text-center text-sm text-plains-muted">
