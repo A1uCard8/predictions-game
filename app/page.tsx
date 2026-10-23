@@ -45,6 +45,8 @@ export default async function Home() {
   const featured = spotlight ? sorted.filter((m) => m.id !== spotlight.id).slice(0, 6) : sorted.slice(0, 6);
 
   const initialPulse = spotlight ? await getMarketPulse(spotlight.id) : null;
+  const leaderboardExperiment =
+    process.env.NEXT_PUBLIC_KISMET_EXPERIMENT === "kismet-center-leaderboard-button-in-predictions";
 
   let spotlightHistory: Awaited<ReturnType<typeof getMarketHistoryBootstrap>> | null = null;
   if (spotlight && marketOptions(spotlight).length === 2) {
@@ -128,7 +130,16 @@ export default async function Home() {
               </div>
             )}
           </div>
-          <aside className="min-h-[360px] lg:min-h-0">
+          <aside
+            className={
+              leaderboardExperiment
+                ? "fixed left-1/2 top-1/2 z-40 min-h-[360px] w-[min(calc(100vw-2rem),300px)] -translate-x-1/2 -translate-y-1/2 lg:min-h-0"
+                : "min-h-[360px] lg:min-h-0"
+            }
+            data-kismet-experiment={
+              leaderboardExperiment ? "kismet-center-leaderboard-button-in-predictions" : undefined
+            }
+          >
             <HomeLeaderboardLive initial={top as { username: string; avatar_url: string | null; elo: number }[]} />
           </aside>
         </div>
